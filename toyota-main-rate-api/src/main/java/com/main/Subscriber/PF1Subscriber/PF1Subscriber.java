@@ -1,0 +1,115 @@
+package com.main.Subscriber.PF1Subscriber;
+
+import com.main.Configuration.PF1SubscriberConfig;
+import com.main.Subscriber.SubscriberInterface;
+import org.springframework.stereotype.Service;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
+
+@Service("PF1")
+public class PF1Subscriber extends Thread implements SubscriberInterface {
+
+    private String subscriberName;
+    private String serverAddress;
+    private int serverPort;
+    private Socket connectionSocket;
+    private BufferedReader reader;
+    private PrintWriter writer;
+    private Boolean status;
+    private List<String> subscribedRateList;
+
+    public PF1Subscriber() throws IOException {
+        this.subscribedRateList = new ArrayList<>();
+        this.setSubscriberName(PF1SubscriberConfig.getSubscriberName());
+        this.setServerAddress(PF1SubscriberConfig.getServerAdress());
+        this.setServerPort(PF1SubscriberConfig.getPort());
+    }
+
+    public Boolean getStatus() {
+        return status;
+    }
+
+    public void setStatus(Boolean status) {
+        this.status = status;
+    }
+
+    public String getSubscriberName() {
+        return subscriberName;
+    }
+
+    private void setSubscriberName(String subscriberName) {
+        this.subscriberName = subscriberName;
+    }
+
+    public String getServerAddress() {
+        return serverAddress;
+    }
+
+    private void setServerAddress(String serverAddress) {
+        this.serverAddress = serverAddress;
+    }
+
+    public int getServerPort() {
+        return serverPort;
+    }
+
+    private void setServerPort(int serverPort) {
+        this.serverPort = serverPort;
+    }
+
+
+    @Override
+    public void connect(String platformName, String userid, String password) throws IOException {
+        this.connectionSocket = new Socket(serverAddress,serverPort);
+        this.setStatus(true);
+        this.reader = new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
+        this.writer = new PrintWriter(connectionSocket.getOutputStream(),true);
+        writer.println(userid+"|"+password);
+        if(!connectionSocket.isConnected()){
+            connectionSocket.close();
+            System.out.println("Connection closed");
+            System.out.println("Wrong userid or password");
+        }
+        this.start();
+    }
+
+    @Override
+    public void disConnect(String platformName, String userid, String password) throws IOException {
+        this.writer.close();
+        this.reader.close();
+        this.setStatus(false);
+        this.connectionSocket.close();
+        System.out.println("Connection closed with :"+ this.subscriberName);
+    }
+
+    @Override
+    public void subscribe(String platformName, String rateName) throws IOException {
+        this.writer.println("subscribe\\|"+platformName+"_"+rateName);
+        this.subscribedRateList.add(rateName);
+    }
+
+    @Override
+    public void unSubscribe(String platformName, String rateName) throws IOException {
+        this.writer.println("unsubscribe\\|"+platformName+"_"+rateName);
+        this.subscribedRateList.remove(rateName);
+    }
+
+    @Override
+    public void run() {
+        String response;
+        while(status){
+            try {
+                response = reader.readLine();
+                System.out.println(response);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+}
