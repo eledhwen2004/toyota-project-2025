@@ -66,6 +66,7 @@ public class PF1Subscriber extends Thread implements SubscriberInterface {
 
     @Override
     public void connect(String platformName, String userid, String password) throws IOException {
+        System.out.println("Connecting to " + serverAddress + ":" + serverPort);
         this.connectionSocket = new Socket(serverAddress,serverPort);
         this.setStatus(true);
         this.reader = new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
@@ -90,13 +91,15 @@ public class PF1Subscriber extends Thread implements SubscriberInterface {
 
     @Override
     public void subscribe(String platformName, String rateName) throws IOException {
-        this.writer.println("subscribe\\|"+platformName+"_"+rateName);
+        System.out.println("Subscribing to " + rateName);
+        this.writer.println("subscribe|"+platformName+"_"+rateName);
         this.subscribedRateList.add(rateName);
     }
 
     @Override
     public void unSubscribe(String platformName, String rateName) throws IOException {
-        this.writer.println("unsubscribe\\|"+platformName+"_"+rateName);
+        System.out.println("Unsubscribing to " + rateName);
+        this.writer.println("unsubscribe|"+platformName+"_"+rateName);
         this.subscribedRateList.remove(rateName);
     }
 

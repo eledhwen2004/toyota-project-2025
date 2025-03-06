@@ -14,6 +14,7 @@ public class RateController {
 
     @GetMapping("/rates/{rate_name}")
     public RateDto getRateByName(@PathVariable String rate_name){
+        System.out.println("Rate request has come for : " + rate_name );
         return rateService.getRateByName(rate_name);
     }
 

@@ -24,14 +24,26 @@ public class Coordinator extends Thread implements CoordinatorInterface{
         for(String subscriberName : subscriberNames){
             subscriberHashMap.put(subscriberName, applicationContext.getBean(subscriberName, SubscriberInterface.class));
         }
-        this.subscriberHashMap.get(this.subscriberNames[0]).connect(this.subscriberNames[0],"1234","1234");
-        this.subscriberHashMap.get(this.subscriberNames[0]).subscribe(this.subscriberNames[0],this.rateNames[0]);
         this.start();
     }
 
     @Override
     public void run() {
-
+        try {
+            for(String subscriberName : subscriberNames){
+                this.subscriberHashMap.get(subscriberName).connect(subscriberName,"1234","1234");
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        try {
+            for(String subscriberName : subscriberNames){
+                for(String rateName : rateNames)
+                this.subscriberHashMap.get(subscriberName).subscribe(subscriberName,rateName);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override

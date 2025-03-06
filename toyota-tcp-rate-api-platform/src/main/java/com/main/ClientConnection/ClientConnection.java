@@ -50,15 +50,13 @@ public class ClientConnection extends Thread implements ClientConnectionInterfac
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        //
+        // Here will change
         String connectionMessage = reader.readLine();
         if (connectionMessage == null) {
             this.clientSocket.close();
             return;
         }
         String []user = connectionMessage.split("\\|");
-        System.out.println(connectionMessage);
-        System.out.println(user[0] + " " + user[1]);
         if(!user[0].equals(exampleUser.getId()) || !user[1].equals(exampleUser.getPassword())){
             writer.println("Wrong username or password");
             this.clientSocket.close();
@@ -92,11 +90,10 @@ public class ClientConnection extends Thread implements ClientConnectionInterfac
     public void subscribeToRate(String rateName) {
         for(Rate rate: rateList) {
             if(rate.getRateName().equals(rateName)) {
-                subscribedRateList.add(rate);
+                synchronized (subscribedRateList) {
+                    subscribedRateList.add(rate);
+                }
             }
-        }
-        for(Rate rate: subscribedRateList) {
-            System.out.println("Subscribed to: " + rate.getRateName());
         }
     }
 
@@ -104,7 +101,9 @@ public class ClientConnection extends Thread implements ClientConnectionInterfac
     public void unsubscribeFromRate(String rateName) {
         for(Rate rate: subscribedRateList) {
             if(rate.getRateName().equals(rateName)) {
-                subscribedRateList.remove(rate);
+                synchronized (subscribedRateList) {
+                    subscribedRateList.remove(rate);
+                }
             }
         }
     }
@@ -112,8 +111,10 @@ public class ClientConnection extends Thread implements ClientConnectionInterfac
     @Override
     public void sendSubscribedRates() throws InterruptedException {
         do{
-            for(Rate rate: subscribedRateList){
-                writer.println(rate.getRateName()+"|"+rate.getAsk()+"|"+rate.getBid()+"|"+rate.getTimestamp());
+            synchronized(subscribedRateList) {
+                for(Rate rate: subscribedRateList){
+                    writer.println(rate.getRateName()+"|"+rate.getAsk()+"|"+rate.getBid()+"|"+rate.getTimestamp());
+                }
             }
             Thread.sleep(1000);
         }while(clientSocket.isConnected());
