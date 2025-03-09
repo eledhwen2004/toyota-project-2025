@@ -23,4 +23,25 @@ public class CoordinatorConfig {
         properties.load(input);
         return properties.getProperty("rate_names").split(",");
     }
+
+    public static String[]getRawRateNames() throws IOException {
+        Properties properties = new Properties();
+        FileInputStream input = new FileInputStream(path);
+        properties.load(input);
+        return properties.getProperty("raw_rates").split(",");
+    }
+
+    public static String[]getDerivedRateNames() throws IOException {
+        Properties properties = new Properties();
+        FileInputStream input = new FileInputStream(path);
+        properties.load(input);
+        return properties.getProperty("derived_rates").split(",");
+    }
+
+    public static String[]getCalculatedRateNames() throws IOException {
+        Properties properties = new Properties();
+        FileInputStream input = new FileInputStream(path);
+        properties.load(input);
+        return properties.getProperty("calculated_rates").split(",");
+    }
 }

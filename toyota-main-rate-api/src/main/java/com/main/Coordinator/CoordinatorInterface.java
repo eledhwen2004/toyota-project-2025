@@ -2,13 +2,17 @@ package com.main.Coordinator;
 
 import com.main.Dto.RateDto;
 import com.main.Subscriber.RateStatus;
+import org.springframework.stereotype.Component;
 
+import java.io.IOException;
+
+@Component
 public interface CoordinatorInterface {
     // Bağlantı gerçekleştiğinde çalışacak callback
-    void onConnect(String platformName, Boolean status);
+    void onConnect(String platformName, Boolean status) throws IOException;
 
     // Bağlantı koptuğunda çalışacak callback
-    void onDisConnect(String platformName, Boolean status);
+    void onDisConnect(String platformName, Boolean status) throws IOException;
 
     // istenen veri ilk defa geldiğinde
     void onRateAvailable(String platformName, String rateName, RateDto rate);

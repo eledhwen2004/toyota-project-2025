@@ -6,11 +6,17 @@ import java.time.Instant;
 
 public class RateDto {
     private String rateName;
-    private String platformName;
     private double ask;
     private double bid;
     private Instant timestamp;
     private RateStatus status;
+
+    public RateDto(String rateName, double ask, double bid, Instant timestamp) {
+        this.rateName = rateName;
+        this.ask = ask;
+        this.bid = bid;
+        this.timestamp = timestamp;
+    }
 
     public String getRateName() {
         return rateName;
@@ -18,14 +24,6 @@ public class RateDto {
 
     public void setRateName(String rateName) {
         this.rateName = rateName;
-    }
-
-    public String getPlatformName() {
-        return platformName;
-    }
-
-    public void setPlatformName(String platformName) {
-        this.platformName = platformName;
     }
 
     public double getAsk() {

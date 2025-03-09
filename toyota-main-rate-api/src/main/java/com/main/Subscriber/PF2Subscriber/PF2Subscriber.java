@@ -2,9 +2,13 @@ package com.main.Subscriber.PF2Subscriber;
 
 import com.main.Configuration.PF1SubscriberConfig;
 import com.main.Configuration.PF2SubscriberConfig;
+import com.main.Coordinator.CoordinatorInterface;
 import com.main.Dto.RateDto;
 import com.main.Subscriber.SubscriberInterface;
 import org.apache.kafka.common.metrics.stats.Rate;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -16,12 +20,22 @@ import java.util.List;
 @Service("PF2")
 public class PF2Subscriber extends Thread implements SubscriberInterface {
 
+    private CoordinatorInterface coordinator;
     private final String subscriberName;
     private final String rateUrl;
     private final String serverUrl;
     private boolean status;
     private final List<String> subscribedRateList;
     private final RestTemplate restTemplate;
+
+    public PF2Subscriber() throws IOException {
+        this.subscriberName = PF2SubscriberConfig.getSubscriberName();;
+        this.serverUrl = PF2SubscriberConfig.getServerAddress() + "/api";
+        this.rateUrl = this.serverUrl + "/rates";
+        this.restTemplate = new RestTemplate();
+        this.status = false;
+        this.subscribedRateList = new ArrayList<>();
+    }
 
     public boolean getStatus() {
         return status;
@@ -43,30 +57,28 @@ public class PF2Subscriber extends Thread implements SubscriberInterface {
         return subscriberName;
     }
 
-    public PF2Subscriber() throws IOException {
-        this.subscriberName = PF2SubscriberConfig.getSubscriberName();;
-        this.serverUrl = PF2SubscriberConfig.getServerAddress() + "/api";
-        this.rateUrl = this.serverUrl + "/rates";
-        this.restTemplate = new RestTemplate();
-        this.status = false;
-        this.subscribedRateList = new ArrayList<>();
+    @Override
+    public void setCoordinator(CoordinatorInterface coordinator) {
+        this.coordinator = coordinator;
     }
 
     @Override
     public void connect(String platformName, String userid, String password) throws IOException {
         System.out.println("Connecting to : " + serverUrl);
         this.status = true;
+        coordinator.onConnect(platformName,status);
         this.start();
     }
 
     @Override
     public void disConnect(String platformName, String userid, String password) throws IOException {
         this.status = false;
+        coordinator.onDisConnect(platformName,status);
     }
 
     @Override
     public void subscribe(String platformName, String rateName) throws IOException {
-        System.out.println("Subscribing to " + rateName);
+        System.out.println("Subscribing to " + platformName + "_" +rateName);
         subscribedRateList.add(platformName + "_" + rateName);
     }
 
@@ -84,7 +96,6 @@ public class PF2Subscriber extends Thread implements SubscriberInterface {
                 ResponseEntity<RateDto> response = restTemplate.getForEntity(rateRequestURL, RateDto.class);
                 RateDto rate = response.getBody();
                 assert rate != null;
-                System.out.println(rate.getRateName()+"\\|"+rate.getAsk()+"\\|"+rate.getBid()+"\\|"+rate.getTimestamp());
             }
             try {
                 Thread.sleep(1000);

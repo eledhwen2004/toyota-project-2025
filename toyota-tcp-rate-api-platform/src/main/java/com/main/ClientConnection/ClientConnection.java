@@ -57,8 +57,9 @@ public class ClientConnection extends Thread implements ClientConnectionInterfac
             return;
         }
         String []user = connectionMessage.split("\\|");
-        if(!user[0].equals(exampleUser.getId()) || !user[1].equals(exampleUser.getPassword())){
-            writer.println("Wrong username or password");
+        if(!user[0].equals(exampleUser.getUsername()) || !user[1].equals(exampleUser.getPassword())){
+            writer.println("Wrong username or password connection closing");
+            System.out.println("Connection closing...");
             this.clientSocket.close();
             return;
         }
@@ -133,6 +134,7 @@ public class ClientConnection extends Thread implements ClientConnectionInterfac
             }
         }while(clientSocket.isConnected());
 
+        System.out.println("Connection closing...");
         try {
             clientSocket.close();
         } catch (IOException e) {

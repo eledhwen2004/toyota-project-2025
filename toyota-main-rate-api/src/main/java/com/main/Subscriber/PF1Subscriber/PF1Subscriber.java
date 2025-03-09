@@ -1,7 +1,10 @@
 package com.main.Subscriber.PF1Subscriber;
 
 import com.main.Configuration.PF1SubscriberConfig;
+import com.main.Coordinator.CoordinatorInterface;
 import com.main.Subscriber.SubscriberInterface;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
@@ -15,6 +18,7 @@ import java.util.List;
 @Service("PF1")
 public class PF1Subscriber extends Thread implements SubscriberInterface {
 
+    private CoordinatorInterface coordinator;
     private String subscriberName;
     private String serverAddress;
     private int serverPort;
@@ -63,20 +67,25 @@ public class PF1Subscriber extends Thread implements SubscriberInterface {
         this.serverPort = serverPort;
     }
 
+    @Override
+    public void setCoordinator(CoordinatorInterface coordinator) {
+        this.coordinator = coordinator;
+    }
 
     @Override
-    public void connect(String platformName, String userid, String password) throws IOException {
+    public void connect(String platformName, String userName, String password) throws IOException {
         System.out.println("Connecting to " + serverAddress + ":" + serverPort);
         this.connectionSocket = new Socket(serverAddress,serverPort);
         this.setStatus(true);
         this.reader = new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
         this.writer = new PrintWriter(connectionSocket.getOutputStream(),true);
-        writer.println(userid+"|"+password);
+        writer.println(userName+"|"+password);
         if(!connectionSocket.isConnected()){
             connectionSocket.close();
             System.out.println("Connection closed");
-            System.out.println("Wrong userid or password");
+            System.out.println("Wrong userName or password");
         }
+        coordinator.onConnect(platformName,status);
         this.start();
     }
 
@@ -85,13 +94,14 @@ public class PF1Subscriber extends Thread implements SubscriberInterface {
         this.writer.close();
         this.reader.close();
         this.setStatus(false);
+        coordinator.onDisConnect(platformName,status);
         this.connectionSocket.close();
         System.out.println("Connection closed with :"+ this.subscriberName);
     }
 
     @Override
     public void subscribe(String platformName, String rateName) throws IOException {
-        System.out.println("Subscribing to " + rateName);
+        System.out.println("Subscribing to " + platformName + "_" +rateName);
         this.writer.println("subscribe|"+platformName+"_"+rateName);
         this.subscribedRateList.add(rateName);
     }
@@ -109,7 +119,6 @@ public class PF1Subscriber extends Thread implements SubscriberInterface {
         while(status){
             try {
                 response = reader.readLine();
-                System.out.println(response);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
