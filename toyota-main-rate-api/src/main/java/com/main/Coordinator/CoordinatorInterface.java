@@ -21,5 +21,5 @@ public interface CoordinatorInterface {
     void onRateUpdate(String platformName, String rateName, RateDto rate);
 
     // istenen verinin durumu ile ilgili bilgilendime
-    void onRateStatus(String platformName, String rateName, RateStatus rateStatus);
+    RateStatus onRateStatus(String platformName, String rateName);
 }

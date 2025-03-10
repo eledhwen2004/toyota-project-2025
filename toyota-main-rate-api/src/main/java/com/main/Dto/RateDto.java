@@ -12,10 +12,11 @@ public class RateDto {
     private RateStatus status;
 
     public RateDto(String rateName, double ask, double bid, Instant timestamp) {
-        this.rateName = rateName;
-        this.ask = ask;
-        this.bid = bid;
-        this.timestamp = timestamp;
+        this.setRateName(rateName);
+        this.setAsk(ask);
+        this.setBid(bid);
+        this.setTimestamp(timestamp);
+        this.setStatus(RateStatus.NOT_AVAILABLE);
     }
 
     public String getRateName() {

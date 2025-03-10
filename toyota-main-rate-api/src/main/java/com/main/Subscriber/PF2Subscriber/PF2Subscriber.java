@@ -4,6 +4,8 @@ import com.main.Configuration.PF1SubscriberConfig;
 import com.main.Configuration.PF2SubscriberConfig;
 import com.main.Coordinator.CoordinatorInterface;
 import com.main.Dto.RateDto;
+import com.main.RateCalculator.RateCalculator;
+import com.main.Subscriber.RateStatus;
 import com.main.Subscriber.SubscriberInterface;
 import org.apache.kafka.common.metrics.stats.Rate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -94,8 +96,18 @@ public class PF2Subscriber extends Thread implements SubscriberInterface {
             for(String rateName : subscribedRateList){
                 String rateRequestURL = this.rateUrl + "/" + rateName;
                 ResponseEntity<RateDto> response = restTemplate.getForEntity(rateRequestURL, RateDto.class);
-                RateDto rate = response.getBody();
-                assert rate != null;
+                RateDto rateDto = response.getBody();
+                switch(coordinator.onRateStatus(this.subscriberName, rateDto.getRateName())){
+                    case RateStatus.NOT_AVAILABLE:
+                        coordinator.onRateAvailable(this.subscriberName,rateDto.getRateName(),rateDto);
+                        break;
+                    case RateStatus.AVAILABLE:
+                        coordinator.onRateUpdate(this.subscriberName,rateDto.getRateName(),rateDto);
+                        break;
+                    case RateStatus.UPDATED:
+                        coordinator.onRateUpdate(this.subscriberName,rateDto.getRateName(),rateDto);
+                        break;
+                }
             }
             try {
                 Thread.sleep(1000);
