@@ -1,6 +1,7 @@
 package com.main.Mapper;
 
 import com.main.Dto.RateDto;
+import com.main.Entity.RateEntity;
 
 import java.time.Instant;
 
@@ -12,7 +13,12 @@ public class RateMapper {
         double ask = Double.parseDouble(fields[1]);
         double bid = Double.parseDouble(fields[2]);
         Instant timestamp = Instant.parse(fields[3]);
-        return new RateDto(rateName,ask,bid,timestamp);
+        return new R ateDto(rateName,ask,bid,timestamp);
+    }
+
+    public static RateEntity rateDtoToRateEntity(RateDto rateDto){
+
+
     }
 
 }

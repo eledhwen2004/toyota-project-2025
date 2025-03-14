@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="[%d] [%-5level] [%t] [%c] %msg%n"/>
+        </Console>
+
+        <!-- File appenders for each logger -->
+        <File name="CacheFile" filename="toyota-main-rate-api/logs/cache.log" append="true">
+            <PatternLayout pattern="[%d] [%-5level] [%t] [%c] %msg%n"/>
+        </File>
+
+        <File name="CoordinatorFile" filename="toyota-main-rate-api/logs/coordinator.log" append="true">
+            <PatternLayout pattern="[%d] [%-5level] [%t] [%c] %msg%n"/>
+        </File>
+
+        <File name="CalculatorFile" filename="toyota-main-rate-api/logs/calculator.log" append="true">
+            <PatternLayout pattern="[%d] [%-5level] [%t] [%c] %msg%n"/>
+        </File>
+
+        <File name="SubscriberFile" filename="toyota-main-rate-api/logs/subscriber.log" append="true">
+            <PatternLayout pattern="[%d] [%-5level] [%t] [%c] %msg%n"/>
+        </File>
+    </Appenders>
+
+    <Loggers>
+        <Logger name="CacheLogger" level="all">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="CacheFile"/>
+        </Logger>
+
+        <Logger name="CoordinatorLogger" level="all">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="CoordinatorFile"/>
+        </Logger>
+
+        <Logger name="CalculatorLogger" level="all">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="CalculatorFile"/>
+        </Logger>
+
+        <Logger name="SubscriberLogger" level="all">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="SubscriberFile"/>
+        </Logger>
+
+        <Root level="all">
+            <AppenderRef ref="Console"/>
+        </Root>
+    </Loggers>
+</Configuration>

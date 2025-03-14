@@ -1,16 +1,12 @@
 package com.main.Subscriber.PF2Subscriber;
 
-import com.main.Configuration.PF1SubscriberConfig;
 import com.main.Configuration.PF2SubscriberConfig;
 import com.main.Coordinator.CoordinatorInterface;
 import com.main.Dto.RateDto;
-import com.main.RateCalculator.RateCalculator;
-import com.main.Subscriber.RateStatus;
+import com.main.Dto.RateStatus;
 import com.main.Subscriber.SubscriberInterface;
-import org.apache.kafka.common.metrics.stats.Rate;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.Lazy;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -29,14 +25,17 @@ public class PF2Subscriber extends Thread implements SubscriberInterface {
     private boolean status;
     private final List<String> subscribedRateList;
     private final RestTemplate restTemplate;
+    private final Logger logger = LogManager.getLogger("SubscriberLogger");
 
     public PF2Subscriber() throws IOException {
+        logger.info("Initializing PF2Subscriber");
         this.subscriberName = PF2SubscriberConfig.getSubscriberName();;
         this.serverUrl = PF2SubscriberConfig.getServerAddress() + "/api";
         this.rateUrl = this.serverUrl + "/rates";
         this.restTemplate = new RestTemplate();
         this.status = false;
         this.subscribedRateList = new ArrayList<>();
+        logger.info("PF2Subscriber initialized");
     }
 
     public boolean getStatus() {
@@ -66,28 +65,33 @@ public class PF2Subscriber extends Thread implements SubscriberInterface {
 
     @Override
     public void connect(String platformName, String userid, String password) throws IOException {
-        System.out.println("Connecting to : " + serverUrl);
+        logger.info("Connecting to {}", serverUrl);
         this.status = true;
         coordinator.onConnect(platformName,status);
+        logger.info("Connected to {}", serverUrl);
         this.start();
     }
 
     @Override
     public void disConnect(String platformName, String userid, String password) throws IOException {
+        logger.info("Disconnecting from {}", serverUrl);
         this.status = false;
         coordinator.onDisConnect(platformName,status);
+        logger.info("Disconnected from {}", serverUrl);
     }
 
     @Override
     public void subscribe(String platformName, String rateName) throws IOException {
-        System.out.println("Subscribing to " + platformName + "_" +rateName);
+        logger.info("{} is subscribing to {}", platformName,rateName);
         subscribedRateList.add(platformName + "_" + rateName);
+        logger.info("{} subscribed to {}", platformName,rateName);
     }
 
     @Override
     public void unSubscribe(String platformName, String rateName) throws IOException {
-        System.out.println("Unsubscribing to " + rateName);
+        logger.info("{} is unsubscribing from {}", platformName,rateName);
         subscribedRateList.remove(platformName + "_" + rateName);
+        logger.info("{} unsubscribed to {}", platformName,rateName);
     }
 
     @Override
@@ -112,6 +116,7 @@ public class PF2Subscriber extends Thread implements SubscriberInterface {
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
+                logger.error("PF2Subscriber Error : {}", e.getMessage());
                 throw new RuntimeException(e);
             }
         }

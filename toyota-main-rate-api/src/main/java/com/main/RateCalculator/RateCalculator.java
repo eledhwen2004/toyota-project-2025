@@ -2,6 +2,8 @@ package com.main.RateCalculator;
 
 import com.main.Dto.RateDto;
 import com.main.Cache.RateCache;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.List;
 
@@ -9,6 +11,8 @@ public class RateCalculator {
     private RateCache rateCache;
     private String [] rawRates;
     private String [] derivedRates;
+    private final Logger logger = LogManager.getLogger("CalculatorLogger");
+
 
     public RateCalculator(RateCache rateCache,String [] rawRates,String [] derivedRates) {
         this.rawRates = rawRates;
@@ -30,8 +34,9 @@ public class RateCalculator {
         return null;
     }
 
-    private RateDto calculateRawRate(String symbol) {
-        List<RateDto> rawRates = rateCache.getRawRatesBySymbol(symbol);
+    private RateDto calculateRawRate(String rateName) {
+        logger.info("Calculating Raw Rate for {}", rateName);
+        List<RateDto> rawRates = rateCache.getRawRatesBySymbol(rateName);
         double dividingFactor = rawRates.size();
         double bid = 0.0;
         double ask = 0.0;
@@ -47,12 +52,14 @@ public class RateCalculator {
             }
         }
         ask /= dividingFactor;
-        return new RateDto(symbol,bid,ask, rawRates.getFirst().getTimestamp());
+        logger.info("Raw Rate Calculated for {}", rateName);
+        return new RateDto(rateName,bid,ask, rawRates.getFirst().getTimestamp());
     }
 
     private RateDto calculateDerivedRate(String rateName) {
-        List<RateDto> firstRawRates = rateCache.getRawRatesBySymbol(rateName.substring(0,2));
-        List<RateDto> secondRawRates = rateCache.getRawRatesBySymbol(rateName.substring(3,5));
+        logger.info("Calculating Derived Rate for  {}",rateName);
+        List<RateDto> firstRawRates = rateCache.getRawRatesBySymbol(rateName.substring(0,3));
+        List<RateDto> secondRawRates = rateCache.getRawRatesBySymbol(rateName.substring(3,6));
         double mid = 0.0;
         double askSum = 0.0;
         double bidSum = 0.0;
@@ -78,6 +85,7 @@ public class RateCalculator {
             bid += secondRawRate.getBid();
         }
         bid = mid * (bid / dividingFactor);
+        logger.info("Derived Rate Calculated for {}", rateName);
         return new RateDto(rateName,bid,ask,firstRawRates.getFirst().getTimestamp());
     }
 

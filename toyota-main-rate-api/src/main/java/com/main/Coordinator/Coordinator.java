@@ -2,11 +2,13 @@ package com.main.Coordinator;
 
 import com.main.Configuration.CoordinatorConfig;
 import com.main.Dto.RateDto;
-import com.main.Mapper.RateMapper;
 import com.main.Cache.RateCache;
 import com.main.RateCalculator.RateCalculator;
-import com.main.Subscriber.RateStatus;
+import com.main.Dto.RateStatus;
+import com.main.Repository.RateRepository;
 import com.main.Subscriber.SubscriberInterface;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.context.ApplicationContext;
 
 import java.io.IOException;
@@ -21,8 +23,11 @@ public class Coordinator extends Thread implements CoordinatorInterface{
     private HashMap<String, SubscriberInterface> subscriberHashMap;
     private RateCache rateCache;
     private RateCalculator rateCalculator;
+    private final Logger logger = LogManager.getLogger("CoordinatorLogger");
+
 
     public Coordinator(ApplicationContext applicationContext) throws IOException {
+        logger.info("Initializing Coordinator ");
         this.applicationContext = applicationContext;
         this.subscriberNames = CoordinatorConfig.getSubscriberNames();
         this.subscribedRateNames = CoordinatorConfig.getRateNames();
@@ -42,11 +47,13 @@ public class Coordinator extends Thread implements CoordinatorInterface{
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        logger.info("Coordinator initialized");
         this.start();
     }
 
     @Override
     public void run() {
+        logger.info("Coordinator is running");
         while(!subscriberHashMap.isEmpty()){
             try {
                 sleep(1001);
@@ -56,18 +63,10 @@ public class Coordinator extends Thread implements CoordinatorInterface{
             for(String rateName : calculatedRateNames){
                 RateDto rateDto = rateCalculator.calculateRate(rateName);
                 rateCache.updateCalculatedRate(rateName,rateDto);
-                System.out.println(rateDto.getRateName() + "|"
-                                        + rateDto.getAsk() + "|"
-                                        + rateDto.getBid() + "|"
-                                        + rateDto.getTimestamp());
             };
             for(String subscriberName : subscriberNames){
                 for(String rateName : subscribedRateNames) {
                     RateDto rateDto = rateCache.getRawRateByName(subscriberName+"_"+rateName);
-                    System.out.println(rateDto.getRateName() + "|"
-                                          + rateDto.getBid() + "|"
-                                          + rateDto.getAsk() + "|"
-                                          + rateDto.getTimestamp());
                 }
             }
         }
@@ -75,6 +74,7 @@ public class Coordinator extends Thread implements CoordinatorInterface{
 
     @Override
     public void onConnect(String platformName, Boolean status) throws IOException {
+        logger.info("Connected to platform {} -- status {}", platformName,status);
         if(status) {
             for (String rateName : subscribedRateNames) {
                 this.subscriberHashMap.get(platformName).subscribe(platformName, rateName);
@@ -84,6 +84,7 @@ public class Coordinator extends Thread implements CoordinatorInterface{
 
     @Override
     public void onDisConnect(String platformName, Boolean status) throws IOException {
+        logger.info("Disconnected from platform {} -- status {}", platformName,status);
         if(!status) {
             for (String rateName : subscribedRateNames) {
                 this.subscriberHashMap.get(platformName).unSubscribe(platformName, rateName);
@@ -93,12 +94,14 @@ public class Coordinator extends Thread implements CoordinatorInterface{
 
     @Override
     public void onRateAvailable(String platformName, String rateName, RateDto rate) {
+        logger.info("Rate available for platform {} -- rateName {}", platformName,rateName);
         rate.setStatus(RateStatus.AVAILABLE);
         rateCache.updateRawRate(rateName,rate);
     }
 
     @Override
     public void onRateUpdate(String platformName, String rateName, RateDto rate) {
+        logger.info("Rate updated for platform {} -- rateName {}", platformName,rateName);
         rate.setStatus(RateStatus.UPDATED);
         rateCache.updateRawRate(rateName,rate);
     }

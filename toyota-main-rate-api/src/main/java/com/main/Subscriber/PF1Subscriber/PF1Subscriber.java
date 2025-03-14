@@ -4,11 +4,10 @@ import com.main.Configuration.PF1SubscriberConfig;
 import com.main.Coordinator.CoordinatorInterface;
 import com.main.Dto.RateDto;
 import com.main.Mapper.RateMapper;
-import com.main.Subscriber.RateStatus;
+import com.main.Dto.RateStatus;
 import com.main.Subscriber.SubscriberInterface;
-import org.apache.kafka.common.metrics.stats.Rate;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
@@ -31,12 +30,16 @@ public class PF1Subscriber extends Thread implements SubscriberInterface {
     private PrintWriter writer;
     private Boolean status;
     private List<String> subscribedRateList;
+    private final Logger logger = LogManager.getLogger("SubscriberLogger");
+
 
     public PF1Subscriber() throws IOException {
+        logger.info("Initializing PF1Subscriber");
         this.subscribedRateList = new ArrayList<>();
         this.setSubscriberName(PF1SubscriberConfig.getSubscriberName());
         this.setServerAddress(PF1SubscriberConfig.getServerAdress());
         this.setServerPort(PF1SubscriberConfig.getPort());
+        logger.info("PF1Subscriber Initialized");
     }
 
     public Boolean getStatus() {
@@ -78,7 +81,7 @@ public class PF1Subscriber extends Thread implements SubscriberInterface {
 
     @Override
     public void connect(String platformName, String userName, String password) throws IOException {
-        System.out.println("Connecting to " + serverAddress + ":" + serverPort);
+        logger.info("Connecting to {} : {}", serverAddress,serverPort);
         this.connectionSocket = new Socket(serverAddress,serverPort);
         this.setStatus(true);
         this.reader = new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
@@ -89,32 +92,37 @@ public class PF1Subscriber extends Thread implements SubscriberInterface {
             System.out.println("Connection closed");
             System.out.println("Wrong userName or password");
         }
+        logger.info("PF1Subscriber Connected to {} : {}", serverAddress,serverPort);
         coordinator.onConnect(platformName,status);
         this.start();
     }
 
     @Override
     public void disConnect(String platformName, String userid, String password) throws IOException {
+        logger.info("Disconnecting from {}", serverAddress);
         this.writer.close();
         this.reader.close();
         this.setStatus(false);
         coordinator.onDisConnect(platformName,status);
         this.connectionSocket.close();
-        System.out.println("Connection closed with :"+ this.subscriberName);
+        logger.info("PF1Subscriber Disconnected from {}", serverAddress);
     }
 
     @Override
     public void subscribe(String platformName, String rateName) throws IOException {
-        System.out.println("Subscribing to " + platformName + "_" +rateName);
+        logger.info("{} is subscribing to {}", platformName,rateName);
         this.writer.println("subscribe|"+platformName+"_"+rateName);
         this.subscribedRateList.add(rateName);
+        logger.info("{} is subscribed to {}", platformName,rateName);
     }
 
     @Override
     public void unSubscribe(String platformName, String rateName) throws IOException {
+        logger.info("{} is unsubscribing from {}", platformName,rateName);
         System.out.println("Unsubscribing to " + rateName);
         this.writer.println("unsubscribe|"+platformName+"_"+rateName);
         this.subscribedRateList.remove(rateName);
+        logger.info("{} is unsubscribed to {}", platformName,rateName);
     }
 
     @Override
@@ -136,6 +144,7 @@ public class PF1Subscriber extends Thread implements SubscriberInterface {
                         break;
                 }
             } catch (IOException e) {
+                logger.error("PF1Subscriber Error : {}", e.getMessage());
                 throw new RuntimeException(e);
             }
         }

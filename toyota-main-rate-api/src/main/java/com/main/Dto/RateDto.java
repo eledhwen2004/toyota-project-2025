@@ -1,7 +1,5 @@
 package com.main.Dto;
 
-import com.main.Subscriber.RateStatus;
-
 import java.time.Instant;
 
 public class RateDto {

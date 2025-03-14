@@ -1,4 +1,4 @@
-package com.main.Subscriber;
+package com.main.Dto;
 
 public enum RateStatus {
     NOT_AVAILABLE,
