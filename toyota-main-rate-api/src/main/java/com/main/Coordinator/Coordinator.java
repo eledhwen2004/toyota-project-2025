@@ -1,12 +1,16 @@
 package com.main.Coordinator;
 
 import com.main.Configuration.CoordinatorConfig;
+import com.main.Database.PostgresqlDatabase;
 import com.main.Dto.RateDto;
 import com.main.Cache.RateCache;
+import com.main.Kafka.RateEvent.RateEventConsumer;
+import com.main.Kafka.RateEvent.RateEventProducer;
 import com.main.RateCalculator.RateCalculator;
 import com.main.Dto.RateStatus;
 import com.main.Repository.RateRepository;
 import com.main.Subscriber.SubscriberInterface;
+import org.apache.kafka.clients.producer.Producer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.context.ApplicationContext;
@@ -16,7 +20,7 @@ import java.util.HashMap;
 
 public class Coordinator extends Thread implements CoordinatorInterface{
 
-    private ApplicationContext applicationContext;
+    private final ApplicationContext applicationContext;
     private String [] subscriberNames;
     private String [] subscribedRateNames;
     private String [] calculatedRateNames;
@@ -24,7 +28,8 @@ public class Coordinator extends Thread implements CoordinatorInterface{
     private RateCache rateCache;
     private RateCalculator rateCalculator;
     private final Logger logger = LogManager.getLogger("CoordinatorLogger");
-
+    private final RateEventProducer rateEventProducer;
+    private final PostgresqlDatabase database;
 
     public Coordinator(ApplicationContext applicationContext) throws IOException {
         logger.info("Initializing Coordinator ");
@@ -47,6 +52,8 @@ public class Coordinator extends Thread implements CoordinatorInterface{
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        this.rateEventProducer = applicationContext.getBean("rateEventProducer", RateEventProducer.class);
+        this.database = applicationContext.getBean("postgresqlDatabase",PostgresqlDatabase.class);
         logger.info("Coordinator initialized");
         this.start();
     }
@@ -63,10 +70,14 @@ public class Coordinator extends Thread implements CoordinatorInterface{
             for(String rateName : calculatedRateNames){
                 RateDto rateDto = rateCalculator.calculateRate(rateName);
                 rateCache.updateCalculatedRate(rateName,rateDto);
+                rateEventProducer.produceRateEvent(rateDto);
+                database.updateDatabase();
             };
             for(String subscriberName : subscriberNames){
                 for(String rateName : subscribedRateNames) {
                     RateDto rateDto = rateCache.getRawRateByName(subscriberName+"_"+rateName);
+                    rateEventProducer.produceRateEvent(rateDto);
+                    database.updateDatabase();
                 }
             }
         }

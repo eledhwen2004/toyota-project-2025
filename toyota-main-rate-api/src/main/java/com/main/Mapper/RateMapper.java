@@ -13,12 +13,16 @@ public class RateMapper {
         double ask = Double.parseDouble(fields[1]);
         double bid = Double.parseDouble(fields[2]);
         Instant timestamp = Instant.parse(fields[3]);
-        return new R ateDto(rateName,ask,bid,timestamp);
+        return new RateDto(rateName,ask,bid,timestamp);
     }
 
     public static RateEntity rateDtoToRateEntity(RateDto rateDto){
-
-
+        RateEntity rateEntity = new RateEntity();
+        rateEntity.rateName = rateDto.getRateName();
+        rateEntity.ask = rateDto.getAsk();
+        rateEntity.bid = rateDto.getBid();
+        rateEntity.rateUpdateTime = rateDto.getTimestamp();
+        return rateEntity;
     }
 
 }

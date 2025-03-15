@@ -15,7 +15,7 @@ import java.util.*;
 import static org.apache.kafka.clients.CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG;
 import static org.apache.kafka.clients.consumer.ConsumerConfig.*;
 
-@Component
+@Component("rateEventConsumer")
 public class RateEventConsumer {
     private final Consumer<String, RateDto> consumer;
     private final String topic;
@@ -35,7 +35,7 @@ public class RateEventConsumer {
     public List<RateDto> consumeRateEvent() {
         List<RateDto> rateDtoList = new ArrayList<>();
         consumer.subscribe(Arrays.asList(topic));
-        ConsumerRecords<String, RateDto> records = consumer.poll(Duration.ofMillis(100));
+        ConsumerRecords<String, RateDto> records = consumer.poll(Duration.ofMillis(1000));
         for (ConsumerRecord<String, RateDto> record : records) {
             rateDtoList.add(record.value());
         }

@@ -21,6 +21,9 @@
         <File name="SubscriberFile" filename="toyota-main-rate-api/logs/subscriber.log" append="true">
             <PatternLayout pattern="[%d] [%-5level] [%t] [%c] %msg%n"/>
         </File>
+        <File name="DatabaseFile" filename="toyota-main-rate-api/logs/database.log" append="true">
+            <PatternLayout pattern="[%d] [%-5level] [%t] [%c] %msg%n"/>
+        </File>
     </Appenders>
 
     <Loggers>
@@ -44,7 +47,12 @@
             <AppenderRef ref="SubscriberFile"/>
         </Logger>
 
-        <Root level="all">
+        <Logger name="DatabaseLogger" level="all">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="DatabaseFile"/>
+        </Logger>
+
+        <Root level="warn">
             <AppenderRef ref="Console"/>
         </Root>
     </Loggers>

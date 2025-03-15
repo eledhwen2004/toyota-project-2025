@@ -2,12 +2,13 @@ package com.main.Kafka.Serdis;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.main.Dto.RateDto;
 import com.main.Entity.RateEntity;
 import org.apache.kafka.common.serialization.Serializer;
 
 public class RateEventSerializer implements Serializer<RateDto> {
-    ObjectMapper objectMapper = new ObjectMapper();
+    ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
 
     @Override
     public byte[] serialize(String topic, RateDto data) {

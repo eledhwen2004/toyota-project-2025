@@ -9,6 +9,8 @@ public class RateDto {
     private Instant timestamp;
     private RateStatus status;
 
+    public RateDto(){};
+
     public RateDto(String rateName, double ask, double bid, Instant timestamp) {
         this.setRateName(rateName);
         this.setAsk(ask);

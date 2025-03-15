@@ -1,7 +1,10 @@
 package com.main.Entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.UpdateTimestamp;
+
 import java.sql.Timestamp;
+import java.time.Instant;
 
 
 @Entity
@@ -21,9 +24,10 @@ public class RateEntity {
     public Double bid;
 
     @Column(nullable = false, updatable = false)
-    public Timestamp rateUpdateTime;
+    public Instant rateUpdateTime;
 
-    @Column(columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP", updatable = false)
+    @UpdateTimestamp
+    @Column(nullable = false)
     public Timestamp dbUpdateTime;
 
 }
