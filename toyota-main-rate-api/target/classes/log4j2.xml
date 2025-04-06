@@ -24,6 +24,9 @@
         <File name="DatabaseFile" filename="toyota-main-rate-api/logs/database.log" append="true">
             <PatternLayout pattern="[%d] [%-5level] [%t] [%c] %msg%n"/>
         </File>
+        <File name="KafkaFile" filename="toyota-main-rate-api/logs/kafka.log" append="true">
+            <PatternLayout pattern="[%d] [%-5level] [%t] [%c] %msg%n"/>
+        </File>
     </Appenders>
 
     <Loggers>
@@ -52,7 +55,12 @@
             <AppenderRef ref="DatabaseFile"/>
         </Logger>
 
-        <Root level="warn">
+        <Logger name="KafkaLogger" level="all">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="KafkaFile"/>
+        </Logger>
+
+        <Root level="error">
             <AppenderRef ref="Console"/>
         </Root>
     </Loggers>

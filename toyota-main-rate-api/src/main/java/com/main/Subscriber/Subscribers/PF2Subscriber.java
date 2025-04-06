@@ -1,21 +1,23 @@
-package com.main.Subscriber.PF2Subscriber;
+package com.main.Subscriber.Subscribers;
 
 import com.main.Configuration.PF2SubscriberConfig;
 import com.main.Coordinator.CoordinatorInterface;
 import com.main.Dto.RateDto;
 import com.main.Dto.RateStatus;
 import com.main.Subscriber.SubscriberInterface;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-@Service("PF2")
+@Getter
+@Setter
 public class PF2Subscriber extends Thread implements SubscriberInterface {
 
     private CoordinatorInterface coordinator;
@@ -29,7 +31,7 @@ public class PF2Subscriber extends Thread implements SubscriberInterface {
 
     public PF2Subscriber() throws IOException {
         logger.info("Initializing PF2Subscriber");
-        this.subscriberName = PF2SubscriberConfig.getSubscriberName();;
+        this.subscriberName = PF2SubscriberConfig.getSubscriberName();
         this.serverUrl = PF2SubscriberConfig.getServerAddress() + "/api";
         this.rateUrl = this.serverUrl + "/rates";
         this.restTemplate = new RestTemplate();
@@ -38,28 +40,8 @@ public class PF2Subscriber extends Thread implements SubscriberInterface {
         logger.info("PF2Subscriber initialized");
     }
 
-    public boolean getStatus() {
-        return status;
-    }
-
-    public void setStatus(boolean status) {
-        this.status = status;
-    }
-
-    public String getServerUrl() {
-        return serverUrl;
-    }
-
-    public String getRateUrl() {
-        return rateUrl;
-    }
-
-    public String getSubscriberName() {
-        return subscriberName;
-    }
-
     @Override
-    public void setCoordinator(CoordinatorInterface coordinator) {
+    public void setCoordinator(CoordinatorInterface coordinator){
         this.coordinator = coordinator;
     }
 

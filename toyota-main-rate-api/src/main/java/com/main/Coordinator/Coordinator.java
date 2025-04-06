@@ -1,5 +1,6 @@
 package com.main.Coordinator;
 
+import com.main.ClassLoader.SubscriberClassLoader;
 import com.main.Configuration.CoordinatorConfig;
 import com.main.Database.PostgresqlDatabase;
 import com.main.Dto.RateDto;
@@ -41,7 +42,7 @@ public class Coordinator extends Thread implements CoordinatorInterface{
         this.rateCache = new RateCache(this.subscriberNames,CoordinatorConfig.getRawRateNames(),CoordinatorConfig.getCalculatedRateNames());
         this.rateCalculator = new RateCalculator(this.rateCache,CoordinatorConfig.getRawRateNames(),CoordinatorConfig.getDerivedRateNames());
         for(String subscriberName : subscriberNames){
-            subscriberHashMap.put(subscriberName, applicationContext.getBean(subscriberName, SubscriberInterface.class));
+            subscriberHashMap.put(subscriberName, SubscriberClassLoader.loadSubscriber(subscriberName + "Subscriber"));
             subscriberHashMap.get(subscriberName).setCoordinator(this);
         }
         try {

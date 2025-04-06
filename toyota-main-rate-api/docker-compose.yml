@@ -2,7 +2,7 @@ version: "3.8"
 services:
   db:
     image: postgres:latest
-    container_name: rate-api-db
+    container_name: postgres-db
     environment:
       POSTGRES_USER: myuser
       POSTGRES_PASSWORD: mypassword
@@ -48,3 +48,45 @@ services:
       KAFKA_CLUSTERS_0_NAME: local
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
 
+  filebeat:
+    image: docker.elastic.co/beats/filebeat-oss:7.12.1
+    container_name: filebeat
+    user: root
+    volumes:
+      - ./filebeat.yml:/usr/share/filebeat/filebeat.yml
+      - ./logs.log:/usr/share/logs.log
+    networks:
+      - logging-network
+
+  opensearch:
+    image: opensearchproject/opensearch:latest
+    container_name: opensearch
+    environment:
+      - discovery.type=single-node
+      - OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m
+      - bootstrap.memory_lock=true
+      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=Aloha.32bit
+    ports:
+      - "9200:9200" # OpenSearch API
+      - "9600:9600" # Performans izleme
+    networks:
+      - logging-network
+
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:latest
+    container_name: opensearch-dashboards
+    environment:
+      - OPENSEARCH_HOSTS=["https://opensearch:9200"]
+      - SERVER_HOST=0.0.0.0
+      - OPENSEARCH_USERNAME=admin
+      - OPENSEARCH_PASSWORD=Aloha.32bit
+    ports:
+      - "5602:5601" # OpenSearch Dashboards web arayüzü
+    networks:
+      - logging-network
+    depends_on:
+      - opensearch
+
+networks:
+  logging-network:
+    driver: bridge

@@ -1,4 +1,4 @@
-package com.main.Subscriber.PF1Subscriber;
+package com.main.Subscriber.Subscribers;
 
 import com.main.Configuration.PF1SubscriberConfig;
 import com.main.Coordinator.CoordinatorInterface;
@@ -6,6 +6,8 @@ import com.main.Dto.RateDto;
 import com.main.Mapper.RateMapper;
 import com.main.Dto.RateStatus;
 import com.main.Subscriber.SubscriberInterface;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
@@ -18,64 +20,33 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
-@Service("PF1")
+@Getter
+@Setter
 public class PF1Subscriber extends Thread implements SubscriberInterface {
 
     private CoordinatorInterface coordinator;
-    private String subscriberName;
-    private String serverAddress;
-    private int serverPort;
+    private final String subscriberName;
+    private final String serverAddress;
+    private final int serverPort;
     private Socket connectionSocket;
     private BufferedReader reader;
     private PrintWriter writer;
     private Boolean status;
-    private List<String> subscribedRateList;
+    private final List<String> subscribedRateList;
     private final Logger logger = LogManager.getLogger("SubscriberLogger");
 
 
     public PF1Subscriber() throws IOException {
         logger.info("Initializing PF1Subscriber");
         this.subscribedRateList = new ArrayList<>();
-        this.setSubscriberName(PF1SubscriberConfig.getSubscriberName());
-        this.setServerAddress(PF1SubscriberConfig.getServerAdress());
-        this.setServerPort(PF1SubscriberConfig.getPort());
+        this.subscriberName = PF1SubscriberConfig.getSubscriberName();
+        this.serverAddress = PF1SubscriberConfig.getServerAdress();
+        this.serverPort = PF1SubscriberConfig.getPort();
         logger.info("PF1Subscriber Initialized");
     }
 
-    public Boolean getStatus() {
-        return status;
-    }
-
-    public void setStatus(Boolean status) {
-        this.status = status;
-    }
-
-    public String getSubscriberName() {
-        return subscriberName;
-    }
-
-    private void setSubscriberName(String subscriberName) {
-        this.subscriberName = subscriberName;
-    }
-
-    public String getServerAddress() {
-        return serverAddress;
-    }
-
-    private void setServerAddress(String serverAddress) {
-        this.serverAddress = serverAddress;
-    }
-
-    public int getServerPort() {
-        return serverPort;
-    }
-
-    private void setServerPort(int serverPort) {
-        this.serverPort = serverPort;
-    }
-
     @Override
-    public void setCoordinator(CoordinatorInterface coordinator) {
+    public void setCoordinator(CoordinatorInterface coordinator){
         this.coordinator = coordinator;
     }
 

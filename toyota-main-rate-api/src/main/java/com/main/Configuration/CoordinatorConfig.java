@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.util.Properties;
 
 public class CoordinatorConfig {
-    private static String path = System.getProperty("user.dir") + "/toyota-main-rate-api/src/main/java/com/main/Coordinator/config.properties";
+    private static String path = System.getProperty("user.dir") + "/toyota-main-rate-api/src/main/resources/configFiles/coordinator.properties";
     String getPath(){
         return this.path;
     }

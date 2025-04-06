@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.util.Properties;
 
 public class PF2SubscriberConfig {
-    private static String path = System.getProperty("user.dir") + "/toyota-main-rate-api/src/main/java/com/main/Subscriber/PF2Subscriber/config.properties";
+    private static String path = System.getProperty("user.dir") + "/toyota-main-rate-api/src/main/resources/configFiles/PF2Subscriber.properties";
     String getPath(){
         return this.path;
     }
