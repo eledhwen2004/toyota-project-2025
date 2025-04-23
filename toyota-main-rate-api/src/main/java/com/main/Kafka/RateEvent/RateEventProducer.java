@@ -6,6 +6,8 @@ import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Component;
 
 import java.util.Properties;
@@ -18,6 +20,7 @@ import static org.apache.kafka.clients.producer.ProducerConfig.VALUE_SERIALIZER_
 @Component("rateEventProducer")
 public class RateEventProducer {
 
+    private final Logger logger = LogManager.getLogger("KafkaLogger");
     private Producer<String, RateDto> producer;
     private final String topic;
 

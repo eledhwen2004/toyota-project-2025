@@ -4,8 +4,8 @@ import java.time.Instant;
 
 public class RateDto {
     private String rateName;
-    private double ask;
     private double bid;
+    private double ask;
     private Instant timestamp;
     private RateStatus status;
 
