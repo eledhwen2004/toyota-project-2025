@@ -25,4 +25,13 @@ public class RateMapper {
         return rateEntity;
     }
 
+    public static RateDto rateEntityToRateDto(RateEntity rateEntity){
+        RateDto rateDto = new RateDto();
+        rateDto.setRateName(rateEntity.rateName);
+        rateDto.setAsk(rateEntity.ask);
+        rateDto.setBid(rateEntity.bid);
+        rateDto.setTimestamp(rateEntity.rateUpdateTime);
+        return rateDto;
+    }
+
 }

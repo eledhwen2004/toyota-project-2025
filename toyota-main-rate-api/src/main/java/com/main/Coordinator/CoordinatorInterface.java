@@ -2,6 +2,7 @@ package com.main.Coordinator;
 
 import com.main.Dto.RateDto;
 import com.main.Dto.RateStatus;
+import com.main.Services.RateService;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;

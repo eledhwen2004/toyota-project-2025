@@ -30,4 +30,5 @@ public class RateEntity {
     @Column(nullable = false)
     public Timestamp dbUpdateTime;
 
+
 }

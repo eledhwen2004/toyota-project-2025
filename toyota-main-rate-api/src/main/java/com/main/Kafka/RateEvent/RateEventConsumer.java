@@ -34,10 +34,12 @@ public class RateEventConsumer {
 
     public List<RateDto> consumeRateEvent() {
         List<RateDto> rateDtoList = new ArrayList<>();
-        consumer.subscribe(Arrays.asList(topic));
-        ConsumerRecords<String, RateDto> records = consumer.poll(Duration.ofMillis(1000));
-        for (ConsumerRecord<String, RateDto> record : records) {
-            rateDtoList.add(record.value());
+        synchronized (consumer) {
+            consumer.subscribe(Arrays.asList(topic));
+            ConsumerRecords<String, RateDto> records = consumer.poll(Duration.ofMillis(1000));
+            for (ConsumerRecord<String, RateDto> record : records) {
+                rateDtoList.add(record.value());
+            }
         }
         return rateDtoList;
     }

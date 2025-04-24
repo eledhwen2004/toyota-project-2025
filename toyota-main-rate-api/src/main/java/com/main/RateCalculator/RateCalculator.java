@@ -1,27 +1,31 @@
 package com.main.RateCalculator;
 
+import com.main.Database.PostgresqlDatabase;
 import com.main.Dto.RateDto;
 import com.main.Cache.RateCache;
+import com.main.Services.RateService;
+import com.main.Services.RateServiceInterface;
 import groovy.lang.GroovyClassLoader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.List;
 
 public class RateCalculator {
-    private RateCache rateCache;
-    private String [] rawRates;
+    private RateServiceInterface rateService;
+    private String [] rawRateNames;
     private String [] derivedRates;
     private final Logger logger = LogManager.getLogger("CalculatorLogger");
     public final String rawRatecalculationScriptUrl = System.getProperty("user.dir") + "/toyota-main-rate-api/Scripts/RateCalculation/RawRateCalculationScript.groovy";
     public final String derivedRateCalculationScriptUrl = System.getProperty("user.dir") + "/toyota-main-rate-api/Scripts/RateCalculation/DerivedRateCalculationScript.groovy";
 
-    public RateCalculator(RateCache rateCache,String [] rawRates,String [] derivedRates) {
-        this.rawRates = rawRates;
+    public RateCalculator(RateServiceInterface rateService, String [] rawRates, String [] derivedRates) {
+        this.rawRateNames = rawRates;
         this.derivedRates = derivedRates;
-        this.rateCache = rateCache;
+        this.rateService = rateService;
     }
 
     public double [] rawRateCalculationMethod(double [] asks,double [] bids) {
@@ -55,8 +59,8 @@ public class RateCalculator {
     }
 
     public RateDto calculateRate(String rateName) {
-        for(String rawRate : rawRates) {
-            if(rawRate.equals(rateName)) {
+        for(String rawRateName : rawRateNames) {
+            if(rawRateName.equals(rateName)) {
                 return calculateRawRate(rateName);
             }
         }
@@ -70,43 +74,55 @@ public class RateCalculator {
 
     private RateDto calculateRawRate(String rateName) {
         logger.info("Calculating Raw Rate for {}", rateName);
-        List<RateDto> rawRates = rateCache.getRawRatesBySymbol(rateName);
-        double [] bids = new double[rawRates.size()];
-        double [] asks = new double[rawRates.size()];
-        for (int i = 0; i < rawRates.size(); i++) {
-            bids[i] = rawRates.get(i).getBid();
+        List <RateDto> rawRateList = rateService.getRawRatesIfContains(rateName);
+        if(rawRateList.isEmpty()) {
+            return null;
         }
-        for(int i = 0; i < rawRates.size(); i++) {
-            asks[i] = rawRates.get(i).getAsk();
+        double [] bids = new double[rawRateList.size()];
+        double [] asks = new double[rawRateList.size()];
+        for (int i = 0; i < rawRateList.size(); i++) {
+            bids[i] = rawRateList.get(i).getBid();
+        }
+        for(int i = 0; i < rawRateList.size(); i++) {
+            asks[i] = rawRateList.get(i).getAsk();
         }
         double [] rateFields = (double[]) rawRateCalculationMethod(bids,asks);
         logger.info("Raw Rate Calculated for {}", rateName);
-        return new RateDto(rateName,rateFields[0],rateFields[1], rawRates.getFirst().getTimestamp());
+        return new RateDto(rateName,rateFields[0],rateFields[1], rawRateList.getFirst().getTimestamp());
     }
 
     private RateDto calculateDerivedRate(String rateName) {
         logger.info("Calculating Derived Rate for  {}",rateName);
-        List<RateDto> firstRawRates = rateCache.getRawRatesBySymbol(rateName.substring(0,3));
-        List<RateDto> secondRawRates = rateCache.getRawRatesBySymbol(rateName.substring(3,6));
-        double []firstRateBids = new double[firstRawRates.size()];
-        double []firstRateAsks = new double[firstRawRates.size()];
-        double []secondRateBids = new double[secondRawRates.size()];
-        double []secondRateAsks = new double[secondRawRates.size()];
-        for(int i = 0;i<firstRawRates.size();i++) {
-            firstRateBids[i] = firstRawRates.get(i).getBid();
+        List<RateDto> firstRawRateList = rateService.getRawRatesIfContains(rateName.substring(0,3));
+        List<RateDto> secondRawRateList = rateService.getRawRatesIfContains(rateName.substring(3,6));
+        if (firstRawRateList.isEmpty() || secondRawRateList.isEmpty()) {
+            logger.error("Raw rate data missing for derived rate calculation: {}", rateName);
+            return null;
         }
-        for(int i = 0;i<secondRawRates.size();i++) {
-            secondRateBids[i] = secondRawRates.get(i).getBid();
+
+
+        double []firstRateBids = new double[firstRawRateList.size()];
+        double []firstRateAsks = new double[firstRawRateList.size()];
+        double []secondRateBids = new double[secondRawRateList.size()];
+        double []secondRateAsks = new double[secondRawRateList.size()];
+        for(int i = 0;i<firstRawRateList.size();i++) {
+            firstRateBids[i] = firstRawRateList.get(i).getBid();
         }
-        for(int i = 0;i<firstRawRates.size();i++) {
-            firstRateAsks[i] = firstRawRates.get(i).getAsk();
+        for(int i = 0;i<secondRawRateList.size();i++) {
+            secondRateBids[i] = secondRawRateList.get(i).getBid();
         }
-        for(int i = 0;i<secondRawRates.size();i++) {
-            secondRateAsks[i] = secondRawRates.get(i).getAsk();
+        for(int i = 0;i<firstRawRateList.size();i++) {
+            firstRateAsks[i] = firstRawRateList.get(i).getAsk();
+        }
+        for(int i = 0;i<secondRawRateList.size();i++) {
+            secondRateAsks[i] = secondRawRateList.get(i).getAsk();
         }
         double [] rateFields = (double[]) derivedRateCalculationMethod(firstRateBids,firstRateAsks,secondRateBids,secondRateAsks);
+        if (rateFields == null || rateFields.length < 2) {
+            throw new IllegalStateException("Groovy script returned null or invalid result");
+        }
         logger.info("Derived Rate Calculated for {}", rateName);
-        return new RateDto(rateName,rateFields[0],rateFields[1],firstRawRates.getFirst().getTimestamp());
+        return new RateDto(rateName,rateFields[0],rateFields[1],secondRawRateList.getFirst().getTimestamp());
     }
 
 }
