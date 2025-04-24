@@ -2,6 +2,7 @@ package com.main.Kafka.RateEvent;
 
 import com.main.Dto.RateDto;
 import com.main.Kafka.Serdis.RateEventSerializer;
+import com.main.Mapper.RateMapper;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -20,14 +21,14 @@ import static org.apache.kafka.clients.producer.ProducerConfig.VALUE_SERIALIZER_
 public class RateEventProducer {
 
     private final Logger logger = LogManager.getLogger("KafkaLogger");
-    private Producer<String, RateDto> producer;
+    private Producer<String, String> producer;
     private final String topic;
 
     public RateEventProducer() {
         final Properties props = new Properties() {{
             put(BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
             put(KEY_SERIALIZER_CLASS_CONFIG,   StringSerializer.class.getCanonicalName());
-            put(VALUE_SERIALIZER_CLASS_CONFIG, RateEventSerializer.class.getCanonicalName());
+            put(VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getCanonicalName());
             put(AUTO_OFFSET_RESET_CONFIG, "earliest"); // ✅ Read all messages from beginning
         }};
         this.producer = new KafkaProducer<>(props);
@@ -35,9 +36,9 @@ public class RateEventProducer {
     }
 
     public void produceRateEvent(RateDto rateDto) {
-        producer.send(new ProducerRecord<>(topic, rateDto.getRateName(), rateDto),
-                (event, ex) -> handleCallback(event, ex, topic, rateDto.getRateName(), rateDto));
 
+        producer.send(new ProducerRecord<>(topic, rateDto.getRateName(), RateMapper.rateDtoToString(rateDto)),
+                (event, ex) -> handleCallback(event, ex, topic, rateDto.getRateName(), rateDto));
     }
 
     private void handleCallback(Object event, Exception ex, String topic, String rateName, RateDto rate) {
