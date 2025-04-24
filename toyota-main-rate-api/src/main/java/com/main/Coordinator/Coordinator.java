@@ -121,7 +121,6 @@ public class Coordinator extends Thread implements CoordinatorInterface{
         rate.setStatus(RateStatus.AVAILABLE);
         this.rateStatusHashMap.put(rateName, RateStatus.AVAILABLE);
         rateCache.updateRawRate(rate);
-        System.out.println("2");
         rateEventProducer.produceRateEvent(rate);
         database.updateRateTable();
     }
@@ -132,7 +131,6 @@ public class Coordinator extends Thread implements CoordinatorInterface{
         rate.setStatus(RateStatus.UPDATED);
         this.rateStatusHashMap.put(rateName, RateStatus.UPDATED);
         rateCache.updateRawRate(rate);
-        System.out.println("3");
         rateEventProducer.produceRateEvent(rate);
         database.updateRateTable();
     }
