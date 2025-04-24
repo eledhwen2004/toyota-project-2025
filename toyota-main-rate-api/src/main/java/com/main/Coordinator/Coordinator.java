@@ -2,14 +2,16 @@ package com.main.Coordinator;
 
 import com.main.ClassLoader.SubscriberClassLoader;
 import com.main.Configuration.CoordinatorConfig;
+import com.main.Configuration.OpenSearchConfig;
 import com.main.Database.PostgresqlDatabase;
 import com.main.Dto.RateDto;
 import com.main.Cache.RateCache;
-import com.main.Entity.RateEntity;
+import com.main.Kafka.Kafka;
 import com.main.Kafka.RateEvent.RateEventProducer;
+import com.main.OpenSearch.OpenSearchService;
 import com.main.RateCalculator.RateCalculator;
 import com.main.Dto.RateStatus;
-import com.main.Services.RateService;
+import com.main.Services.RateServiceImpl;
 import com.main.Services.RateServiceInterface;
 import com.main.Subscriber.SubscriberInterface;
 import org.apache.logging.log4j.LogManager;
@@ -22,18 +24,19 @@ import java.util.HashMap;
 public class Coordinator extends Thread implements CoordinatorInterface{
 
     private final ApplicationContext applicationContext;
-    private String [] subscriberNames;
-    private String [] subscribedRateNames;
-    private String [] rawRateNames;
-    private String [] calculatedRateNames;
-    private HashMap<String, RateStatus> rateStatusHashMap;
+    private final String [] subscriberNames;
+    private final String [] subscribedRateNames;
+    private final String [] rawRateNames;
+    private final String [] calculatedRateNames;
+    private final HashMap<String, RateStatus> rateStatusHashMap;
     private final HashMap<String, SubscriberInterface> subscriberHashMap;
     private final RateCache rateCache;
     private final RateCalculator rateCalculator;
     private final RateServiceInterface rateService;
     private final Logger logger = LogManager.getLogger("CoordinatorLogger");
-    private final RateEventProducer rateEventProducer;
+    private final Kafka kafka;
     private final PostgresqlDatabase database;
+    private final OpenSearchService openSearchService;
 
     public Coordinator(ApplicationContext applicationContext) throws IOException {
         logger.info("Initializing Coordinator ");
@@ -49,10 +52,11 @@ public class Coordinator extends Thread implements CoordinatorInterface{
             }
         }
         this.subscriberHashMap = new HashMap<>();
-        this.rateEventProducer = applicationContext.getBean("rateEventProducer", RateEventProducer.class);
+        this.kafka = new Kafka();
         this.database = applicationContext.getBean("postgresqlDatabase",PostgresqlDatabase.class);
         this.rateCache = new RateCache();
-        this.rateService = new RateService(this.rateCache,this.database,this.rawRateNames,this.calculatedRateNames);
+        this.openSearchService = applicationContext.getBean("openSearchService", OpenSearchService.class);
+        this.rateService = new RateServiceImpl(this.rateCache,this.database,this.rawRateNames,this.calculatedRateNames);
         this.rateCalculator = new RateCalculator(this.rateService,CoordinatorConfig.getRawRateNames(),CoordinatorConfig.getDerivedRateNames());
         for(String subscriberName : subscriberNames){
             subscriberHashMap.put(subscriberName, SubscriberClassLoader.loadSubscriber(subscriberName + "Subscriber"));
@@ -88,9 +92,10 @@ public class Coordinator extends Thread implements CoordinatorInterface{
                     continue;
                 }
                 rateCache.updateCalculatedRate(rateDto);
-                rateEventProducer.produceRateEvent(rateDto);
-                database.updateRateTable();
-            };
+                kafka.produceRateEvent(rateDto);
+                openSearchService.updateRates(kafka.consumeRateEvent());
+                database.updateRateTable(kafka.consumeRateEvent());
+            }
 
         }
     }
@@ -121,8 +126,8 @@ public class Coordinator extends Thread implements CoordinatorInterface{
         rate.setStatus(RateStatus.AVAILABLE);
         this.rateStatusHashMap.put(rateName, RateStatus.AVAILABLE);
         rateCache.updateRawRate(rate);
-        rateEventProducer.produceRateEvent(rate);
-        database.updateRateTable();
+        kafka.produceRateEvent(rate);
+        database.updateRateTable(kafka.consumeRateEvent());
     }
 
     @Override
@@ -131,8 +136,8 @@ public class Coordinator extends Thread implements CoordinatorInterface{
         rate.setStatus(RateStatus.UPDATED);
         this.rateStatusHashMap.put(rateName, RateStatus.UPDATED);
         rateCache.updateRawRate(rate);
-        rateEventProducer.produceRateEvent(rate);
-        database.updateRateTable();
+        kafka.produceRateEvent(rate);
+        database.updateRateTable(kafka.consumeRateEvent());
     }
 
     @Override

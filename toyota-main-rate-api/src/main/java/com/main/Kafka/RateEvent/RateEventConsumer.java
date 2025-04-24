@@ -15,7 +15,6 @@ import java.util.*;
 import static org.apache.kafka.clients.CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG;
 import static org.apache.kafka.clients.consumer.ConsumerConfig.*;
 
-@Component("rateEventConsumer")
 public class RateEventConsumer {
     private final Consumer<String, RateDto> consumer;
     private final String topic;

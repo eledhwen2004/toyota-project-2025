@@ -1,5 +1,8 @@
 package com.main.Subscriber.Subscribers;
 
+import com.hazelcast.shaded.com.fasterxml.jackson.jr.ob.JSON;
+import com.main.Authentication.LoginRequest;
+import com.main.Authentication.UserAuth;
 import com.main.Configuration.PF2SubscriberConfig;
 import com.main.Coordinator.CoordinatorInterface;
 import com.main.Dto.RateDto;
@@ -23,17 +26,20 @@ public class PF2Subscriber extends Thread implements SubscriberInterface {
     private CoordinatorInterface coordinator;
     private final String subscriberName;
     private final String rateUrl;
+    private final String loginUrl;
     private final String serverUrl;
     private boolean status;
     private final List<String> subscribedRateList;
     private final RestTemplate restTemplate;
     private final Logger logger = LogManager.getLogger("SubscriberLogger");
+    private int startNumber = 0;
 
     public PF2Subscriber() throws IOException {
         logger.info("Initializing PF2Subscriber");
         this.subscriberName = PF2SubscriberConfig.getSubscriberName();
         this.serverUrl = PF2SubscriberConfig.getServerAddress() + "/api";
         this.rateUrl = this.serverUrl + "/rates";
+        this.loginUrl = this.serverUrl + "/login";
         this.restTemplate = new RestTemplate();
         this.status = false;
         this.subscribedRateList = new ArrayList<>();
@@ -48,6 +54,17 @@ public class PF2Subscriber extends Thread implements SubscriberInterface {
     @Override
     public void connect(String platformName, String userid, String password) throws IOException {
         logger.info("Connecting to {}", serverUrl);
+        LoginRequest loginRequest = new LoginRequest(userid,password);
+        ResponseEntity<UserAuth> userAuthResponse = restTemplate.postForEntity(this.loginUrl,loginRequest,UserAuth.class);
+        UserAuth loginResponse = userAuthResponse.getBody();
+        if(loginResponse.getStatus().equals("success")){
+            System.out.println(loginResponse.getMessage());
+        }
+        else{
+            System.out.println("status : " + loginResponse.getStatus());
+            System.out.println("message : " + loginResponse.getMessage());
+            return;
+        }
         this.status = true;
         coordinator.onConnect(platformName,status);
         logger.info("Connected to {}", serverUrl);
@@ -78,6 +95,7 @@ public class PF2Subscriber extends Thread implements SubscriberInterface {
 
     @Override
     public void run(){
+        System.out.println("Start number is " + startNumber );
         while(status){
             for(String rateName : subscribedRateList){
                 String rateRequestURL = this.rateUrl + "/" + rateName;

@@ -14,7 +14,7 @@ public class RateDto implements Serializable {
     private Instant timestamp;
     private RateStatus status;
 
-    public RateDto(){};
+    public RateDto(){}
 
     public RateDto(String rateName, double ask, double bid, Instant timestamp) {
         this.setRateName(rateName);

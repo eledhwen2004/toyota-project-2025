@@ -18,15 +18,12 @@ import java.util.Optional;
 public class PostgresqlDatabase{
 
     @Autowired RateRepository rateRepository;
-    private final RateEventConsumer rateEventConsumer;
     private final Logger logger = LoggerFactory.getLogger("DatabaseLogger");
 
     PostgresqlDatabase(){
-        rateEventConsumer = new RateEventConsumer();
     }
 
-    public void updateRateTable(){
-        List<RateDto> rateDtoList = rateEventConsumer.consumeRateEvent();
+    public void updateRateTable(List<RateDto> rateDtoList){
         logger.info("Rate Event Consumed: " + rateDtoList.size());
         List<RateEntity> rateEntityList = new ArrayList<>();
         for(RateDto rateDto : rateDtoList){

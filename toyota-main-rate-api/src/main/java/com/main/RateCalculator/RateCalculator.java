@@ -1,9 +1,6 @@
 package com.main.RateCalculator;
 
-import com.main.Database.PostgresqlDatabase;
 import com.main.Dto.RateDto;
-import com.main.Cache.RateCache;
-import com.main.Services.RateService;
 import com.main.Services.RateServiceInterface;
 import groovy.lang.GroovyClassLoader;
 import org.apache.logging.log4j.LogManager;
@@ -11,7 +8,6 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.List;
 
 public class RateCalculator {

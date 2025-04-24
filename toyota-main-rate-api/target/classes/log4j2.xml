@@ -27,40 +27,48 @@
         <File name="KafkaFile" filename="toyota-main-rate-api/logs/kafka.log" append="true">
             <PatternLayout pattern="[%d] [%-5level] [%t] [%c] %msg%n"/>
         </File>
+        <File name="OpenSearchFile" filename="toyota-main-rate-api/logs/openSearch.log" append="true">
+            <PatternLayout pattern="[%d] [%-5level] [%t] [%c] %msg%n"/>
+        </File>
     </Appenders>
 
     <Loggers>
-        <Logger name="CacheLogger" level="all">
+        <Logger name="CacheLogger" level="all" additivity="false">
             <AppenderRef ref="Console"/>
             <AppenderRef ref="CacheFile"/>
         </Logger>
 
-        <Logger name="CoordinatorLogger" level="all">
+        <Logger name="CoordinatorLogger" level="all" additivity="false">
             <AppenderRef ref="Console"/>
             <AppenderRef ref="CoordinatorFile"/>
         </Logger>
 
-        <Logger name="CalculatorLogger" level="all">
+        <Logger name="CalculatorLogger" level="all" additivity="false">
             <AppenderRef ref="Console"/>
             <AppenderRef ref="CalculatorFile"/>
         </Logger>
 
-        <Logger name="SubscriberLogger" level="all">
+        <Logger name="SubscriberLogger" level="all" additivity="false">
             <AppenderRef ref="Console"/>
             <AppenderRef ref="SubscriberFile"/>
         </Logger>
 
-        <Logger name="DatabaseLogger" level="all">
+        <Logger name="DatabaseLogger" level="all" additivity="false">
             <AppenderRef ref="Console"/>
             <AppenderRef ref="DatabaseFile"/>
         </Logger>
 
-        <Logger name="KafkaLogger" level="all">
+        <Logger name="KafkaLogger" level="all" additivity="false">
             <AppenderRef ref="Console"/>
             <AppenderRef ref="KafkaFile"/>
         </Logger>
 
-        <Root level="error">
+        <Logger name="OpenSearchLogger" level="all" additivity="false">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="OpenSearchFile"/>
+        </Logger>
+
+        <Root level="info" additivity="false">
             <AppenderRef ref="Console"/>
         </Root>
     </Loggers>

@@ -8,17 +8,17 @@ import com.main.Dto.RateDto;
 import java.util.ArrayList;
 import java.util.List;
 
-public class RateService implements RateServiceInterface {
+public class RateServiceImpl implements RateServiceInterface {
 
     private final RateCache rateCache;
     private final PostgresqlDatabase database;
     private String [] rawRateNames;
     private String [] calculatedRateNames;
 
-    public RateService(RateCache rateCache,
-                       PostgresqlDatabase database,
-                       String [] rawRateNames,
-                       String [] calculatedRateNames) {
+    public RateServiceImpl(RateCache rateCache,
+                           PostgresqlDatabase database,
+                           String [] rawRateNames,
+                           String [] calculatedRateNames) {
         this.rateCache = rateCache;
         this.database = database;
         this.rawRateNames = rawRateNames;
