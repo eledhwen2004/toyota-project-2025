@@ -1,11 +1,10 @@
-
 # Financial Data Integration and Calculation Project
 
 This project aims to develop a comprehensive software solution for integrating, processing, and calculating financial data from multiple data providers. The system is designed to collect raw financial data, perform calculations, and disseminate the results.
 
 ## Overview
 
-The system architecture involves several key components working together to achieve the project's goals.  It is specifically designed to handle Forex (foreign exchange) data, with each data set including a unique identifier, bid price, ask price, and timestamp. [cite: 3, 4, 5, 6, 7]
+The system architecture involves several key components working together to achieve the project's goals. It is specifically designed to handle Forex (foreign exchange) data, with each data set including a unique identifier, bid price, ask price, and timestamp. [cite: 3, 4, 5, 6, 7]
 
 ## Key Components
 
@@ -63,46 +62,44 @@ The system architecture involves several key components working together to achi
 
 ## Running the Application
 
-**Assumed JAR File Names (Example - adjust based on your actual file names):**
+**Assumed Module Directories (Example - adjust based on your actual project structure):**
 
-* `toyota-tcp-rate-api-platform.jar` (for Platform App 1 - TCP)
-* `toyota-rest-rate-api-platform.jar` (for Platform App 2 - REST API)
-* `toyota-main-rate-api.jar` (containing the Coordinator, Subscribers, Kafka Producer logic)
+* `toyota-tcp-rate-api-platform`
+* `toyota-rest-rate-api-platform`
+* `toyota-main-rate-api`
 
-**Startup Sequence:**
+Before running each application, you need to package it using Maven. Open a terminal in each of the module directories and execute the following commands:
 
-1.  **Start the TCP Platform Application:**
-    Open a new terminal or command prompt and navigate to the `dist` directory. Then, execute the following command:
-
+1.  **For TCP Platform Application:**
     ```bash
-    java -jar toyota-tcp-rate-api-platform.jar
+    cd toyota-tcp-rate-api-platform
+    mvn clean package -DskipTests
+    java -jar target/toyota-tcp-rate-api-platform-*.jar
     ```
+    *(Replace `toyota-tcp-rate-api-platform-*.jar` with the actual name of your JAR file in the `target` directory.)*
 
-    This will start the TCP-based platform application, which will begin sending raw data to the system.
-
-2.  **Start the REST Platform Application:**
-    Open another new terminal or command prompt, navigate to the `dist` directory, and execute:
-
+2.  **For REST Platform Application:**
     ```bash
-    java -jar toyota-rest-rate-api-platform.jar
+    cd toyota-rest-rate-api-platform
+    mvn clean package -DskipTests
+    java -jar target/toyota-rest-rate-api-platform-*.jar
     ```
+    *(Replace `toyota-rest-rate-api-platform-*.jar` with the actual name of your JAR file in the `target` directory.)*
 
-    This will start the REST API-based platform application, enabling it to send raw data to the system.
-
-3.  **Start the Main Rate API (Coordinator and Processing Logic):**
-    Open a third new terminal or command prompt, navigate to the `dist` directory, and execute:
-
+3.  **For Main Rate API (Coordinator and Processing Logic):**
     ```bash
-    java -jar toyota-main-rate-api.jar
+    cd toyota-main-rate-api
+    mvn clean package -DskipTests
+    java -jar target/toyota-main-rate-api-*.jar
     ```
-
-    This command is assumed to start the core of your rate processing system, including the Subscribers that receive data from the platforms, the Coordinator that calculates rates, and the Kafka Producer that sends the calculated rates to Kafka.
+    *(Replace `toyota-main-rate-api-*.jar` with the actual name of your JAR file in the `target` directory.)*
 
 **Important Notes:**
 
 * Ensure Kafka, Hazelcast, and PostgreSQL are running and accessible before starting the application components.
-* Configuration files for each component must be properly set up (e.g., database connection details, Kafka broker addresses, Hazelcast configuration).
-* Refer to the individual component documentation for specific command-line arguments or configuration options.
+* Configuration files for each component must be properly set up (e.g., database connection details, Kafka broker addresses, Hazelcast configuration). These configuration files are typically located within the packaged JAR or expected to be in a specific location relative to where the JAR is run.
+* The `-DskipTests` flag is used to skip running unit tests during the packaging process. You can remove this flag if you want to run the tests.
+* Refer to the individual component documentation for any specific command-line arguments or configuration options they might require.
 
 ## Project Structure
 
