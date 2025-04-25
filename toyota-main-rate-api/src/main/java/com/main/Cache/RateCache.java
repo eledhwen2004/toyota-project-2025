@@ -16,10 +16,11 @@ public class RateCache {
     private final Logger cacheLogger = LogManager.getLogger("CacheLogger");
     private final IMap<String, RateDto> rawRateCache;
     private final IMap<String, RateDto> calculatedRateCache;
+    private final HazelcastInstance hazelcastInstance;
 
     public RateCache(){
         cacheLogger.info("Rate Cache is being initialized");
-        HazelcastInstance hazelcastInstance = Hazelcast.getHazelcastInstanceByName("hazelcast-instance");
+        this.hazelcastInstance = Hazelcast.getHazelcastInstanceByName("hazelcast-instance");
         this.rawRateCache = hazelcastInstance.getMap("raw-rate-cache");
         this.calculatedRateCache = hazelcastInstance.getMap("calculated-rate-cache");
         cacheLogger.info("Rate Cache has been created!");
@@ -80,6 +81,10 @@ public class RateCache {
         cacheLogger.info("Calculated rate {} is getting updated!",calculatedRateName);
         calculatedRateCache.put(calculatedRateName, calculatedRate);
         cacheLogger.info("Calculated rate {} has been updated!",calculatedRateName);
+    }
+
+    public void close(){
+        this.hazelcastInstance.shutdown();
     }
 
 }

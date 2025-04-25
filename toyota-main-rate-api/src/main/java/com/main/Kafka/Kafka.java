@@ -25,4 +25,5 @@ public class Kafka {
     public List<RateDto> consumeRateEvent(){
         return consumer.consumeRateEvent();
     }
+
 }

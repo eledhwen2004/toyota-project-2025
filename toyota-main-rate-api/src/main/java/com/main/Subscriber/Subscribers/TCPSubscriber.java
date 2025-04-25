@@ -29,7 +29,7 @@ public class TCPSubscriber extends Thread implements SubscriberInterface {
     private Socket connectionSocket;
     private BufferedReader reader;
     private PrintWriter writer;
-    private Boolean status;
+    private Boolean connectionStatus;
     private final List<String> subscribedRateList;
     private final Logger logger = LogManager.getLogger("SubscriberLogger");
 
@@ -52,7 +52,7 @@ public class TCPSubscriber extends Thread implements SubscriberInterface {
     public void connect(String platformName, String userName, String password) throws IOException {
         logger.info("Connecting to {} : {}", serverAddress,serverPort);
         this.connectionSocket = new Socket(serverAddress,serverPort);
-        this.setStatus(true);
+        this.setConnectionStatus(true);
         this.reader = new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
         this.writer = new PrintWriter(connectionSocket.getOutputStream(),true);
         writer.println(userName+"|"+password);
@@ -62,7 +62,7 @@ public class TCPSubscriber extends Thread implements SubscriberInterface {
             System.out.println("Wrong userName or password");
         }
         logger.info("PF1Subscriber Connected to {} : {}", serverAddress,serverPort);
-        coordinator.onConnect(platformName,status);
+        coordinator.onConnect(platformName, connectionStatus);
         this.start();
     }
 
@@ -71,8 +71,8 @@ public class TCPSubscriber extends Thread implements SubscriberInterface {
         logger.info("Disconnecting from {}", serverAddress);
         this.writer.close();
         this.reader.close();
-        this.setStatus(false);
-        coordinator.onDisConnect(platformName,status);
+        this.setConnectionStatus(false);
+        coordinator.onDisConnect(platformName, connectionStatus);
         this.connectionSocket.close();
         logger.info("PF1Subscriber Disconnected from {}", serverAddress);
     }
@@ -97,7 +97,7 @@ public class TCPSubscriber extends Thread implements SubscriberInterface {
     @Override
     public void run() {
         String response;
-        while(status){
+        while(connectionStatus){
             try {
                 response = reader.readLine();
                 RateDto rateDto = RateMapper.stringToRateDto(response);

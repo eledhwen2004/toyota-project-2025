@@ -21,7 +21,7 @@ import org.springframework.context.ApplicationContext;
 import java.io.IOException;
 import java.util.HashMap;
 
-public class Coordinator extends Thread implements CoordinatorInterface{
+public class Coordinator extends Thread implements CoordinatorInterface,AutoCloseable{
 
     private final ApplicationContext applicationContext;
     private final String [] subscriberNames;
@@ -82,6 +82,7 @@ public class Coordinator extends Thread implements CoordinatorInterface{
                 }
             }
         }
+
         //REST
         String[] RESTSubscriberNames = RESTSubscriberConfig.getSubscriberNames();
         String[] RESTServerAdreseses = RESTSubscriberConfig.getServerAddresses();
@@ -123,6 +124,17 @@ public class Coordinator extends Thread implements CoordinatorInterface{
 
         logger.info("Coordinator initialized");
         this.start();
+    }
+
+
+    @Override
+    public void close() throws Exception {
+        for(String subscriberName : subscriberNames){
+            SubscriberInterface sub = this.subscriberHashMap.get(subscriberName);
+            sub.disConnect(subscriberName,"1234","1234");
+            subscriberHashMap.remove(subscriberName);
+        }
+        rateCache.close();
     }
 
     @Override
@@ -194,4 +206,6 @@ public class Coordinator extends Thread implements CoordinatorInterface{
     public RateStatus onRateStatus(String platformName, String rateName) {
         return rateStatusHashMap.get(rateName);
     }
+
+
 }

@@ -26,7 +26,7 @@ public class RESTSubscriber extends Thread implements SubscriberInterface {
     private final String rateUrl;
     private final String loginUrl;
     private final String serverUrl;
-    private boolean status;
+    private boolean connectionStatus;
     private final List<String> subscribedRateList;
     private final RestTemplate restTemplate;
     private final Logger logger = LogManager.getLogger("SubscriberLogger");
@@ -39,7 +39,7 @@ public class RESTSubscriber extends Thread implements SubscriberInterface {
         this.rateUrl = this.serverUrl + "/rates";
         this.loginUrl = this.serverUrl + "/login";
         this.restTemplate = new RestTemplate();
-        this.status = false;
+        this.connectionStatus = false;
         this.subscribedRateList = new ArrayList<>();
         logger.info( subscriberName+ "Subscriber initialized");
     }
@@ -63,8 +63,8 @@ public class RESTSubscriber extends Thread implements SubscriberInterface {
             System.out.println("message : " + loginResponse.getMessage());
             return;
         }
-        this.status = true;
-        coordinator.onConnect(platformName,status);
+        this.connectionStatus = true;
+        coordinator.onConnect(platformName, connectionStatus);
         logger.info("Connected to {}", serverUrl);
         this.start();
     }
@@ -72,8 +72,8 @@ public class RESTSubscriber extends Thread implements SubscriberInterface {
     @Override
     public void disConnect(String platformName, String userid, String password) throws IOException {
         logger.info("Disconnecting from {}", serverUrl);
-        this.status = false;
-        coordinator.onDisConnect(platformName,status);
+        this.connectionStatus = false;
+        coordinator.onDisConnect(platformName, connectionStatus);
         logger.info("Disconnected from {}", serverUrl);
     }
 
@@ -94,7 +94,7 @@ public class RESTSubscriber extends Thread implements SubscriberInterface {
     @Override
     public void run(){
         System.out.println("Start number is " + startNumber );
-        while(status){
+        while(connectionStatus){
             for(String rateName : subscribedRateList){
                 String rateRequestURL = this.rateUrl + "/" + rateName;
                 ResponseEntity<RateDto> response = restTemplate.getForEntity(rateRequestURL, RateDto.class);
