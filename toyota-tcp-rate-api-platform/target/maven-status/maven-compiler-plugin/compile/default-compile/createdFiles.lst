@@ -1,0 +1,8 @@
+com/main/ClientConnection/ClientConnection.class
+com/main/ToyotaTcpRateApiPlatformApplication.class
+com/main/Server/Server.class
+com/main/Configuration/Configuration.class
+com/main/User/User.class
+com/main/Server/ServerInterface.class
+com/main/Rate/Rate.class
+com/main/ClientConnection/ClientConnectionInterface.class
