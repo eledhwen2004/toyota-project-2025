@@ -17,4 +17,6 @@ public interface SubscriberInterface {
     void unSubscribe(String platformName, String rateName) throws IOException;
 
     void setCoordinator(CoordinatorInterface coordinator);
+
+    boolean getConnectionStatus();
 }
