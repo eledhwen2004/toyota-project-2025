@@ -1,0 +1,15 @@
+/home/emirhan/Projects/toyota-projects/toyota-rest-rate-api-platform/src/main/java/com/rate_api/Authentication/UserAuth.java
+/home/emirhan/Projects/toyota-projects/toyota-rest-rate-api-platform/src/main/java/com/rate_api/Configuration/Configuration.java
+/home/emirhan/Projects/toyota-projects/toyota-rest-rate-api-platform/src/main/java/com/rate_api/Controller/RateController.java
+/home/emirhan/Projects/toyota-projects/toyota-rest-rate-api-platform/src/main/java/com/rate_api/Controller/UserController.java
+/home/emirhan/Projects/toyota-projects/toyota-rest-rate-api-platform/src/main/java/com/rate_api/Dto/RateDto.java
+/home/emirhan/Projects/toyota-projects/toyota-rest-rate-api-platform/src/main/java/com/rate_api/Dto/UserDto.java
+/home/emirhan/Projects/toyota-projects/toyota-rest-rate-api-platform/src/main/java/com/rate_api/Entity/Rate.java
+/home/emirhan/Projects/toyota-projects/toyota-rest-rate-api-platform/src/main/java/com/rate_api/Mapper/RateMapper.java
+/home/emirhan/Projects/toyota-projects/toyota-rest-rate-api-platform/src/main/java/com/rate_api/RateList/RateList.java
+/home/emirhan/Projects/toyota-projects/toyota-rest-rate-api-platform/src/main/java/com/rate_api/RateList/RateListInterface.java
+/home/emirhan/Projects/toyota-projects/toyota-rest-rate-api-platform/src/main/java/com/rate_api/Service/Impl/RateServiceImpl.java
+/home/emirhan/Projects/toyota-projects/toyota-rest-rate-api-platform/src/main/java/com/rate_api/Service/Impl/UserServiceImpl.java
+/home/emirhan/Projects/toyota-projects/toyota-rest-rate-api-platform/src/main/java/com/rate_api/Service/RateService.java
+/home/emirhan/Projects/toyota-projects/toyota-rest-rate-api-platform/src/main/java/com/rate_api/Service/UserService.java
+/home/emirhan/Projects/toyota-projects/toyota-rest-rate-api-platform/src/main/java/com/rate_api/ToyotaRestRateApiPlatformApplication.java
