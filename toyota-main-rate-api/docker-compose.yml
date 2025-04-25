@@ -54,7 +54,7 @@ services:
     user: root
     volumes:
       - ./filebeat.yml:/usr/share/filebeat/filebeat.yml
-      - ./logs.log:/usr/share/logs.log
+      - ./logs/filebeat.log:/usr/share/logs.log
     networks:
       - logging-network
 

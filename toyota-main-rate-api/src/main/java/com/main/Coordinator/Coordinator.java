@@ -2,12 +2,12 @@ package com.main.Coordinator;
 
 import com.main.ClassLoader.SubscriberClassLoader;
 import com.main.Configuration.CoordinatorConfig;
-import com.main.Configuration.OpenSearchConfig;
+import com.main.Configuration.RESTSubscriberConfig;
+import com.main.Configuration.TCPSubscriberConfig;
 import com.main.Database.PostgresqlDatabase;
 import com.main.Dto.RateDto;
 import com.main.Cache.RateCache;
 import com.main.Kafka.Kafka;
-import com.main.Kafka.RateEvent.RateEventProducer;
 import com.main.OpenSearch.OpenSearchService;
 import com.main.RateCalculator.RateCalculator;
 import com.main.Dto.RateStatus;
@@ -58,13 +58,63 @@ public class Coordinator extends Thread implements CoordinatorInterface{
         this.openSearchService = applicationContext.getBean("openSearchService", OpenSearchService.class);
         this.rateService = new RateServiceImpl(this.rateCache,this.database,this.rawRateNames,this.calculatedRateNames);
         this.rateCalculator = new RateCalculator(this.rateService,CoordinatorConfig.getRawRateNames(),CoordinatorConfig.getDerivedRateNames());
-        for(String subscriberName : subscriberNames){
-            subscriberHashMap.put(subscriberName, SubscriberClassLoader.loadSubscriber(subscriberName + "Subscriber"));
-            subscriberHashMap.get(subscriberName).setCoordinator(this);
+
+        //TCP
+        String [] TCPSubscriberNames = TCPSubscriberConfig.getSubscriberNames();
+        String [] TCPServerAdress = TCPSubscriberConfig.getServerAdresses();
+        int [] TCPServerPorts =  TCPSubscriberConfig.getPorts();
+        for(int i = 0;i<TCPSubscriberNames.length;i++) {
+            for(int j = 0;j<subscriberNames.length;j++) {
+                if(subscriberNames[i].equals(TCPSubscriberNames[i])){
+                    System.out.println("Registering Subscriber : " + subscriberNames[i]);
+                    SubscriberInterface sub = SubscriberClassLoader.loadSubscriber(
+                            "TCPSubscriber",
+                            new Class<?>[]{String.class, String.class, int.class},
+                            new Object[]{TCPSubscriberNames[i], TCPServerAdress[i], TCPServerPorts[i]}
+                    );
+
+                    if (sub == null) {
+                        throw new IllegalStateException("Failed to load subscriber: " + TCPSubscriberNames[i]);
+                    }
+
+                    subscriberHashMap.put(TCPSubscriberNames[i], sub);
+                    sub.setCoordinator(this);
+                }
+            }
         }
+        //REST
+        String[] RESTSubscriberNames = RESTSubscriberConfig.getSubscriberNames();
+        String[] RESTServerAdreseses = RESTSubscriberConfig.getServerAddresses();
+
+        for (int i = 0; i < RESTSubscriberNames.length; i++) {
+            for (int j = 0; j < subscriberNames.length; j++) {
+                if (subscriberNames[j].equals(RESTSubscriberNames[i])) {
+                    System.out.println("Registering Subscriber : " + subscriberNames[j]);
+
+                    SubscriberInterface sub = SubscriberClassLoader.loadSubscriber(
+                            "RESTSubscriber",
+                            new Class<?>[]{String.class, String.class},
+                            new Object[]{RESTSubscriberNames[i], RESTServerAdreseses[i]}
+                    );
+
+                    if (sub == null) {
+                        throw new IllegalStateException("Failed to load subscriber: " + RESTSubscriberNames[i]);
+                    }
+
+                    subscriberHashMap.put(RESTSubscriberNames[i], sub);
+                    sub.setCoordinator(this);
+                }
+            }
+        }
+
+
         try {
             for(String subscriberName : subscriberNames){
-                this.subscriberHashMap.get(subscriberName).connect(subscriberName,"1234","1234");
+                SubscriberInterface sub = this.subscriberHashMap.get(subscriberName);
+                if(sub == null){
+                    throw new IllegalStateException("Failed to get subscriber from HashMap: " + subscriberName);
+                }
+                sub.connect(subscriberName,"1234","1234");
                 System.out.println(subscriberName + " connected");
             }
         } catch (IOException e) {

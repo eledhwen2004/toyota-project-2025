@@ -1,9 +1,7 @@
 package com.main.Subscriber.Subscribers;
 
-import com.hazelcast.shaded.com.fasterxml.jackson.jr.ob.JSON;
 import com.main.Authentication.LoginRequest;
 import com.main.Authentication.UserAuth;
-import com.main.Configuration.PF2SubscriberConfig;
 import com.main.Coordinator.CoordinatorInterface;
 import com.main.Dto.RateDto;
 import com.main.Dto.RateStatus;
@@ -21,7 +19,7 @@ import java.util.List;
 
 @Getter
 @Setter
-public class PF2Subscriber extends Thread implements SubscriberInterface {
+public class RESTSubscriber extends Thread implements SubscriberInterface {
 
     private CoordinatorInterface coordinator;
     private final String subscriberName;
@@ -34,16 +32,16 @@ public class PF2Subscriber extends Thread implements SubscriberInterface {
     private final Logger logger = LogManager.getLogger("SubscriberLogger");
     private int startNumber = 0;
 
-    public PF2Subscriber() throws IOException {
-        logger.info("Initializing PF2Subscriber");
-        this.subscriberName = PF2SubscriberConfig.getSubscriberName();
-        this.serverUrl = PF2SubscriberConfig.getServerAddress() + "/api";
+    public RESTSubscriber(String subscriberName, String serverUrl) throws IOException {
+        logger.info("Initializing"+ subscriberName +"Subscriber");
+        this.subscriberName = subscriberName;
+        this.serverUrl = serverUrl + "/api";
         this.rateUrl = this.serverUrl + "/rates";
         this.loginUrl = this.serverUrl + "/login";
         this.restTemplate = new RestTemplate();
         this.status = false;
         this.subscribedRateList = new ArrayList<>();
-        logger.info("PF2Subscriber initialized");
+        logger.info( subscriberName+ "Subscriber initialized");
     }
 
     @Override

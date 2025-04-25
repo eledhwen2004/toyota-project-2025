@@ -12,9 +12,11 @@ public class SubscriberClassLoader {
     private static final String classpathRoot = System.getProperty("user.dir") + "toyota-main-rate/target/classes/";
     private static final String subscriberClassPath = "com.main.Subscriber.Subscribers.";
 
-    public static SubscriberInterface loadSubscriber(String subscriberName){
+    public static SubscriberInterface loadSubscriber(String subscriberName,
+                                                     Class<?>[] paramTypes,
+                                                     Object[] params){
         // Point to root of class files
-        URL[] urls = null;
+        URL[] urls;
         try {
             urls = new URL[]{new URL("file://" + classpathRoot)};
         } catch (MalformedURLException e) {
@@ -24,7 +26,7 @@ public class SubscriberClassLoader {
         try (URLClassLoader loader = new URLClassLoader(urls)) {
             Class<?> loadedClass = loader.loadClass(subscriberClassPath + subscriberName);
             // Create instance and cast to SubscriberInterface
-            return (SubscriberInterface) loadedClass.getDeclaredConstructor().newInstance();
+            return (SubscriberInterface) loadedClass.getConstructor(paramTypes).newInstance(params);
         } catch (IOException | ClassNotFoundException | InvocationTargetException | InstantiationException |
                  IllegalAccessException | NoSuchMethodException e) {
             throw new RuntimeException(e);

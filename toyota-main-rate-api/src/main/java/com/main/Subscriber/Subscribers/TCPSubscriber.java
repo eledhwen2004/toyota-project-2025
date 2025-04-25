@@ -1,6 +1,5 @@
 package com.main.Subscriber.Subscribers;
 
-import com.main.Configuration.PF1SubscriberConfig;
 import com.main.Coordinator.CoordinatorInterface;
 import com.main.Dto.RateDto;
 import com.main.Mapper.RateMapper;
@@ -21,7 +20,7 @@ import java.util.List;
 
 @Getter
 @Setter
-public class PF1Subscriber extends Thread implements SubscriberInterface {
+public class TCPSubscriber extends Thread implements SubscriberInterface {
 
     private CoordinatorInterface coordinator;
     private final String subscriberName;
@@ -35,13 +34,13 @@ public class PF1Subscriber extends Thread implements SubscriberInterface {
     private final Logger logger = LogManager.getLogger("SubscriberLogger");
 
 
-    public PF1Subscriber() throws IOException {
-        logger.info("Initializing PF1Subscriber");
+    public TCPSubscriber(String subscriberName, String serverAddress, int serverPort) throws IOException {
+        logger.info("Initializing"+ subscriberName +"Subscriber");
         this.subscribedRateList = new ArrayList<>();
-        this.subscriberName = PF1SubscriberConfig.getSubscriberName();
-        this.serverAddress = PF1SubscriberConfig.getServerAdress();
-        this.serverPort = PF1SubscriberConfig.getPort();
-        logger.info("PF1Subscriber Initialized");
+        this.subscriberName = subscriberName;
+        this.serverAddress = serverAddress;
+        this.serverPort = serverPort;
+        logger.info(subscriberName + "Subscriber Initialized");
     }
 
     @Override

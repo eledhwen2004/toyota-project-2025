@@ -1,9 +1,9 @@
 filebeat.inputs:
   - type: log
     paths:
-      - /home/emirhan/Projects/toyota-projects/toyota-main-rate-api/*.log
+      - /home/emirhan/Projects/toyota-projects/toyota-main-rate-api/logs/filebeat.log
 
-output.opensearch:
+output.elasticsearch:
   hosts: ["https://opensearch:9200"]
   username: "admin"
   password: "Aloha.32bit"
@@ -11,6 +11,8 @@ output.opensearch:
   ssl:
     verification_mode: none
 
+setup.template.name: "filebeat"
+setup.template.pattern: "filebeat-*"
 setup.template.enabled: true
 setup.ilm.enabled: true
 
