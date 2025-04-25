@@ -38,11 +38,14 @@ public class Coordinator extends Thread implements CoordinatorInterface,AutoClos
     private final PostgresqlDatabase database;
     private final OpenSearchService openSearchService;
 
+    private final String userName = "1234";
+    private final String password = "1234";
+
     public Coordinator(ApplicationContext applicationContext) throws IOException {
         logger.info("Initializing Coordinator ");
         this.applicationContext = applicationContext;
         this.subscriberNames = CoordinatorConfig.getSubscriberNames();
-        this.subscribedRateNames = CoordinatorConfig.getRateNames();
+        this.subscribedRateNames = CoordinatorConfig.getRawRateNames();
         this.rawRateNames = CoordinatorConfig.getRawRateNames();
         this.calculatedRateNames = CoordinatorConfig.getCalculatedRateNames();
         this.rateStatusHashMap = new HashMap<>();
@@ -58,8 +61,15 @@ public class Coordinator extends Thread implements CoordinatorInterface,AutoClos
         this.openSearchService = applicationContext.getBean("openSearchService", OpenSearchService.class);
         this.rateService = new RateServiceImpl(this.rateCache,this.database,this.rawRateNames,this.calculatedRateNames);
         this.rateCalculator = new RateCalculator(this.rateService,CoordinatorConfig.getRawRateNames(),CoordinatorConfig.getDerivedRateNames());
+        this.TCPSubscriberRegisterer();
+        this.RESTSubscriberRegisterer();
+        this.SubscriberConnector(this.userName,this.password);
 
-        //TCP
+        logger.info("Coordinator initialized");
+        this.start();
+    }
+
+    public void TCPSubscriberRegisterer() throws IOException {
         String [] TCPSubscriberNames = TCPSubscriberConfig.getSubscriberNames();
         String [] TCPServerAdress = TCPSubscriberConfig.getServerAdresses();
         int [] TCPServerPorts =  TCPSubscriberConfig.getPorts();
@@ -82,8 +92,9 @@ public class Coordinator extends Thread implements CoordinatorInterface,AutoClos
                 }
             }
         }
+    }
 
-        //REST
+    public void RESTSubscriberRegisterer() throws IOException {
         String[] RESTSubscriberNames = RESTSubscriberConfig.getSubscriberNames();
         String[] RESTServerAdreseses = RESTSubscriberConfig.getServerAddresses();
 
@@ -107,23 +118,22 @@ public class Coordinator extends Thread implements CoordinatorInterface,AutoClos
                 }
             }
         }
+    }
 
-
+    public void SubscriberConnector(String userName,String password) throws IOException {
         try {
             for(String subscriberName : subscriberNames){
                 SubscriberInterface sub = this.subscriberHashMap.get(subscriberName);
                 if(sub == null){
                     throw new IllegalStateException("Failed to get subscriber from HashMap: " + subscriberName);
                 }
-                sub.connect(subscriberName,"1234","1234");
+                sub.connect(subscriberName,userName,password);
                 System.out.println(subscriberName + " connected");
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
-        logger.info("Coordinator initialized");
-        this.start();
     }
 
 

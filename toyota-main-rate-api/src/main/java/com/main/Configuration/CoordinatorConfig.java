@@ -17,13 +17,6 @@ public class CoordinatorConfig {
         return properties.getProperty("subscriber_names").split(",");
     }
 
-    public static String[]getRateNames() throws IOException {
-        Properties properties = new Properties();
-        FileInputStream input = new FileInputStream(path);
-        properties.load(input);
-        return properties.getProperty("rate_names").split(",");
-    }
-
     public static String[]getRawRateNames() throws IOException {
         Properties properties = new Properties();
         FileInputStream input = new FileInputStream(path);
@@ -42,6 +35,15 @@ public class CoordinatorConfig {
         Properties properties = new Properties();
         FileInputStream input = new FileInputStream(path);
         properties.load(input);
-        return properties.getProperty("calculated_rates").split(",");
+        String [] derivedRates = properties.getProperty("derived_rates").split(",");
+        String [] rawRateNames = properties.getProperty("raw_rates").split(",");
+        String [] calculatedRateNames = new String[derivedRates.length + rawRateNames.length];
+        for(int i = 0; i < derivedRates.length; i++){
+            calculatedRateNames[i] = derivedRates[i];
+        }
+        for(int i = 0; i < rawRateNames.length; i++){
+            calculatedRateNames[i+ derivedRates.length] = rawRateNames[i];
+        }
+        return calculatedRateNames;
     }
 }
