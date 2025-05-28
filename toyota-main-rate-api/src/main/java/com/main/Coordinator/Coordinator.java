@@ -2,8 +2,7 @@ package com.main.Coordinator;
 
 import com.main.ClassLoader.SubscriberClassLoader;
 import com.main.Configuration.CoordinatorConfig;
-import com.main.Configuration.RESTSubscriberConfig;
-import com.main.Configuration.TCPSubscriberConfig;
+import com.main.Configuration.SubscriberConfig;
 import com.main.Database.PostgresqlDatabase;
 import com.main.Dto.RateDto;
 import com.main.Cache.RateCache;
@@ -19,17 +18,19 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.context.ApplicationContext;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 public class Coordinator extends Thread implements CoordinatorInterface,AutoCloseable{
 
     private final ApplicationContext applicationContext;
-    private final String [] subscriberNames;
+    private final List<String> subscriberNames = new ArrayList<>();
     private final String [] subscribedRateNames;
     private final String [] rawRateNames;
     private final String [] calculatedRateNames;
-    private final HashMap<String, RateStatus> rateStatusHashMap;
-    private final HashMap<String, SubscriberInterface> subscriberHashMap;
+    private final HashMap<String, RateStatus> rateStatusHashMap = new HashMap<>();
+    private final HashMap<String, SubscriberInterface> subscriberHashMap = new HashMap<>();;
     private final RateCache rateCache;
     private final RateCalculator rateCalculator;
     private final RateServiceInterface rateService;
@@ -44,79 +45,68 @@ public class Coordinator extends Thread implements CoordinatorInterface,AutoClos
     public Coordinator(ApplicationContext applicationContext) throws IOException {
         logger.info("Initializing Coordinator ");
         this.applicationContext = applicationContext;
-        this.subscriberNames = CoordinatorConfig.getSubscriberNames();
+        this.SubscriberRegisterer();
         this.subscribedRateNames = CoordinatorConfig.getRawRateNames();
         this.rawRateNames = CoordinatorConfig.getRawRateNames();
         this.calculatedRateNames = CoordinatorConfig.getCalculatedRateNames();
-        this.rateStatusHashMap = new HashMap<>();
         for(String rawRateNames : rawRateNames) {
             for(String subscriberName : subscriberNames) {
                 rateStatusHashMap.put(subscriberName + "_" + rawRateNames, RateStatus.NOT_AVAILABLE);
             }
         }
-        this.subscriberHashMap = new HashMap<>();
         this.kafka = new Kafka();
         this.database = applicationContext.getBean("postgresqlDatabase",PostgresqlDatabase.class);
         this.rateCache = new RateCache();
         this.openSearchService = applicationContext.getBean("openSearchService", OpenSearchService.class);
         this.rateService = new RateServiceImpl(this.rateCache,this.database,this.rawRateNames,this.calculatedRateNames);
         this.rateCalculator = new RateCalculator(this.rateService,CoordinatorConfig.getRawRateNames(),CoordinatorConfig.getDerivedRateNames());
-        this.TCPSubscriberRegisterer();
-        this.RESTSubscriberRegisterer();
         this.SubscriberConnector(this.userName,this.password);
 
         logger.info("Coordinator initialized");
         this.start();
     }
 
-    public void TCPSubscriberRegisterer() throws IOException {
-        String [] TCPSubscriberNames = TCPSubscriberConfig.getSubscriberNames();
-        String [] TCPServerAdress = TCPSubscriberConfig.getServerAdresses();
-        int [] TCPServerPorts =  TCPSubscriberConfig.getPorts();
-        for(int i = 0;i<TCPSubscriberNames.length;i++) {
-            for(int j = 0;j<subscriberNames.length;j++) {
-                if(subscriberNames[i].equals(TCPSubscriberNames[i])){
-                    System.out.println("Registering Subscriber : " + subscriberNames[i]);
-                    SubscriberInterface sub = SubscriberClassLoader.loadSubscriber(
-                            "TCPSubscriber",
-                            new Class<?>[]{String.class, String.class, int.class},
-                            new Object[]{TCPSubscriberNames[i], TCPServerAdress[i], TCPServerPorts[i]}
-                    );
+    public void SubscriberRegisterer() throws IOException {
+        String [] ServerAddresses = SubscriberConfig.getServerAddresses();
+        for (String serverAddress : ServerAddresses) {
+            if (serverAddress.isEmpty()) continue;
 
-                    if (sub == null) {
-                        throw new IllegalStateException("Failed to load subscriber: " + TCPSubscriberNames[i]);
+            String newSubscriberName = "PF" + (subscriberNames.size() + 1);
+            System.out.println("Registering Subscriber : " + newSubscriberName);
+            SubscriberInterface sub = null;
+
+            if (serverAddress.startsWith("http://") || serverAddress.startsWith("https://")) {
+                sub = SubscriberClassLoader.loadSubscriber(
+                        "RESTSubscriber",
+                        new Class<?>[]{String.class, String.class},
+                        new Object[]{newSubscriberName, serverAddress}
+                );
+            } else {
+                String[] parts = serverAddress.split("\\s+");
+                if (parts.length == 2) {
+                    try {
+                        String host = parts[0];
+                        int port = Integer.parseInt(parts[1]);
+                        sub = SubscriberClassLoader.loadSubscriber(
+                                "TCPSubscriber",
+                                new Class<?>[]{String.class, String.class, int.class},
+                                new Object[]{newSubscriberName, host, port}
+                        );
+                    } catch (NumberFormatException e) {
+                        System.out.println("Invalid TCP port: " + parts[1]);
                     }
-
-                    subscriberHashMap.put(TCPSubscriberNames[i], sub);
-                    sub.setCoordinator(this);
+                } else {
+                    System.out.println("Invalid TCP entry format: " + serverAddress);
                 }
             }
-        }
-    }
-
-    public void RESTSubscriberRegisterer() throws IOException {
-        String[] RESTSubscriberNames = RESTSubscriberConfig.getSubscriberNames();
-        String[] RESTServerAdreseses = RESTSubscriberConfig.getServerAddresses();
-
-        for (int i = 0; i < RESTSubscriberNames.length; i++) {
-            for (int j = 0; j < subscriberNames.length; j++) {
-                if (subscriberNames[j].equals(RESTSubscriberNames[i])) {
-                    System.out.println("Registering Subscriber : " + subscriberNames[j]);
-
-                    SubscriberInterface sub = SubscriberClassLoader.loadSubscriber(
-                            "RESTSubscriber",
-                            new Class<?>[]{String.class, String.class},
-                            new Object[]{RESTSubscriberNames[i], RESTServerAdreseses[i]}
-                    );
-
-                    if (sub == null) {
-                        throw new IllegalStateException("Failed to load subscriber: " + RESTSubscriberNames[i]);
-                    }
-
-                    subscriberHashMap.put(RESTSubscriberNames[i], sub);
-                    sub.setCoordinator(this);
-                }
+            if(sub == null) {
+                logger.error("Problem occurred while registering subscriber : {}\n", newSubscriberName);
+                continue;
             }
+            this.subscriberNames.add(newSubscriberName);
+            subscriberHashMap.put(newSubscriberName, sub);
+            sub.setCoordinator(this);
+
         }
     }
 
