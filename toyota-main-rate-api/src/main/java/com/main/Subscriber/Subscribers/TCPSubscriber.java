@@ -101,16 +101,13 @@ public class TCPSubscriber extends Thread implements SubscriberInterface {
             try {
                 response = reader.readLine();
                 RateDto rateDto = RateMapper.stringToRateDto(response);
-                for(String subsribedRateName : subscribedRateList ){
-                    if(rateDto.getRateName().equals(this.subscriberName+"_"+subsribedRateName)){
+                for(String subscribedRateName : subscribedRateList ){
+                    if(rateDto.getRateName().equals(this.subscriberName+"_"+subscribedRateName)){
                         switch(coordinator.onRateStatus(this.subscriberName, rateDto.getRateName())){
                             case RateStatus.NOT_AVAILABLE:
                                 coordinator.onRateAvailable(this.subscriberName,rateDto.getRateName(),rateDto);
                                 break;
-                            case RateStatus.AVAILABLE:
-                                coordinator.onRateUpdate(this.subscriberName,rateDto.getRateName(),rateDto);
-                                break;
-                            case RateStatus.UPDATED:
+                            case RateStatus.AVAILABLE,RateStatus.UPDATED:
                                 coordinator.onRateUpdate(this.subscriberName,rateDto.getRateName(),rateDto);
                                 break;
                         }

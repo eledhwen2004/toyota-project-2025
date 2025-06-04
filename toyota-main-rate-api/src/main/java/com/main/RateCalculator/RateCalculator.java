@@ -1,7 +1,7 @@
 package com.main.RateCalculator;
 
+import com.main.Cache.RateCache;
 import com.main.Dto.RateDto;
-import com.main.Services.RateServiceInterface;
 import groovy.lang.GroovyClassLoader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -11,17 +11,17 @@ import java.lang.reflect.Method;
 import java.util.List;
 
 public class RateCalculator {
-    private RateServiceInterface rateService;
+    private RateCache rateCache;
     private String [] rawRateNames;
     private String [] derivedRates;
     private final Logger logger = LogManager.getLogger("CalculatorLogger");
     public final String rawRatecalculationScriptUrl = System.getProperty("user.dir") + "/toyota-main-rate-api/Scripts/RateCalculation/RawRateCalculationScript.groovy";
     public final String derivedRateCalculationScriptUrl = System.getProperty("user.dir") + "/toyota-main-rate-api/Scripts/RateCalculation/DerivedRateCalculationScript.groovy";
 
-    public RateCalculator(RateServiceInterface rateService, String [] rawRates, String [] derivedRates) {
+    public RateCalculator(RateCache rateCache, String [] rawRates, String [] derivedRates) {
         this.rawRateNames = rawRates;
         this.derivedRates = derivedRates;
-        this.rateService = rateService;
+        this.rateCache = rateCache;
     }
 
     public double [] rawRateCalculationMethod(double [] asks,double [] bids) {
@@ -70,7 +70,7 @@ public class RateCalculator {
 
     private RateDto calculateRawRate(String rateName) {
         logger.info("Calculating Raw Rate for {}", rateName);
-        List <RateDto> rawRateList = rateService.getRawRatesIfContains(rateName);
+        List <RateDto> rawRateList = rateCache.getRawRatesIfContains(rateName);
         if(rawRateList.isEmpty()) {
             return null;
         }
@@ -89,8 +89,8 @@ public class RateCalculator {
 
     private RateDto calculateDerivedRate(String rateName) {
         logger.info("Calculating Derived Rate for  {}",rateName);
-        List<RateDto> firstRawRateList = rateService.getRawRatesIfContains(rateName.substring(0,3));
-        List<RateDto> secondRawRateList = rateService.getRawRatesIfContains(rateName.substring(3,6));
+        List<RateDto> firstRawRateList = rateCache.getRawRatesIfContains(rateName.substring(0,3));
+        List<RateDto> secondRawRateList = rateCache.getRawRatesIfContains(rateName.substring(3,6));
         if (firstRawRateList.isEmpty() || secondRawRateList.isEmpty()) {
             logger.error("Raw rate data missing for derived rate calculation: {}", rateName);
             return null;

@@ -2,9 +2,6 @@ package com.main.OpenSearch;
 
 import com.main.Configuration.OpenSearchConfig;
 import com.main.Dto.RateDto;
-import com.main.Entity.RateEntity;
-import com.main.Kafka.RateEvent.RateEventConsumer;
-import com.main.Mapper.RateMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.opensearch.action.index.IndexRequest;
@@ -15,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service

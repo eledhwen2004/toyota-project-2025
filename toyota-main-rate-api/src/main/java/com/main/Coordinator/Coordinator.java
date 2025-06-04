@@ -3,15 +3,11 @@ package com.main.Coordinator;
 import com.main.ClassLoader.SubscriberClassLoader;
 import com.main.Configuration.CoordinatorConfig;
 import com.main.Configuration.SubscriberConfig;
-import com.main.Database.PostgresqlDatabase;
 import com.main.Dto.RateDto;
 import com.main.Cache.RateCache;
 import com.main.Kafka.Kafka;
-import com.main.OpenSearch.OpenSearchService;
 import com.main.RateCalculator.RateCalculator;
 import com.main.Dto.RateStatus;
-import com.main.Services.RateServiceImpl;
-import com.main.Services.RateServiceInterface;
 import com.main.Subscriber.SubscriberInterface;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -33,11 +29,8 @@ public class Coordinator extends Thread implements CoordinatorInterface,AutoClos
     private final HashMap<String, SubscriberInterface> subscriberHashMap = new HashMap<>();;
     private final RateCache rateCache;
     private final RateCalculator rateCalculator;
-    private final RateServiceInterface rateService;
     private final Logger logger = LogManager.getLogger("CoordinatorLogger");
     private final Kafka kafka;
-    private final PostgresqlDatabase database;
-    private final OpenSearchService openSearchService;
 
     private final String userName = "1234";
     private final String password = "1234";
@@ -55,11 +48,8 @@ public class Coordinator extends Thread implements CoordinatorInterface,AutoClos
             }
         }
         this.kafka = new Kafka();
-        this.database = applicationContext.getBean("postgresqlDatabase",PostgresqlDatabase.class);
         this.rateCache = new RateCache();
-        this.openSearchService = applicationContext.getBean("openSearchService", OpenSearchService.class);
-        this.rateService = new RateServiceImpl(this.rateCache,this.database,this.rawRateNames,this.calculatedRateNames);
-        this.rateCalculator = new RateCalculator(this.rateService,CoordinatorConfig.getRawRateNames(),CoordinatorConfig.getDerivedRateNames());
+        this.rateCalculator = new RateCalculator(this.rateCache,CoordinatorConfig.getRawRateNames(),CoordinatorConfig.getDerivedRateNames());
         this.SubscriberConnector(this.userName,this.password);
 
         logger.info("Coordinator initialized");
@@ -155,8 +145,6 @@ public class Coordinator extends Thread implements CoordinatorInterface,AutoClos
                 }
                 rateCache.updateCalculatedRate(rateDto);
                 kafka.produceRateEvent(rateDto);
-                openSearchService.updateRates(kafka.consumeRateEvent());
-                database.updateRateTable(kafka.consumeRateEvent());
             }
 
         }
@@ -189,7 +177,6 @@ public class Coordinator extends Thread implements CoordinatorInterface,AutoClos
         this.rateStatusHashMap.put(rateName, RateStatus.AVAILABLE);
         rateCache.updateRawRate(rate);
         kafka.produceRateEvent(rate);
-        database.updateRateTable(kafka.consumeRateEvent());
     }
 
     @Override
@@ -199,7 +186,6 @@ public class Coordinator extends Thread implements CoordinatorInterface,AutoClos
         this.rateStatusHashMap.put(rateName, RateStatus.UPDATED);
         rateCache.updateRawRate(rate);
         kafka.produceRateEvent(rate);
-        database.updateRateTable(kafka.consumeRateEvent());
     }
 
     @Override

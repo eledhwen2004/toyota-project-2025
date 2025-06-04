@@ -103,10 +103,7 @@ public class RESTSubscriber extends Thread implements SubscriberInterface {
                     case RateStatus.NOT_AVAILABLE:
                         coordinator.onRateAvailable(this.subscriberName,rateDto.getRateName(),rateDto);
                         break;
-                    case RateStatus.AVAILABLE:
-                        coordinator.onRateUpdate(this.subscriberName,rateDto.getRateName(),rateDto);
-                        break;
-                    case RateStatus.UPDATED:
+                    case RateStatus.AVAILABLE,RateStatus.UPDATED:
                         coordinator.onRateUpdate(this.subscriberName,rateDto.getRateName(),rateDto);
                         break;
                 }
