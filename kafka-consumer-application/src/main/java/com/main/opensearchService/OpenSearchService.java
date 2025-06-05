@@ -1,51 +1,41 @@
 package com.main.opensearchService;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.main.entity.RateEntity;
-import org.apache.http.HttpHost;
 import org.opensearch.action.index.IndexRequest;
-import org.opensearch.client.RequestOptions;
-import org.opensearch.client.RestClient;
-import org.opensearch.client.RestHighLevelClient;
-import org.springframework.stereotype.Service;
+import org.opensearch.client.*;
+import java.util.*;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
+import org.opensearch.common.xcontent.XContentType;
+import org.springframework.stereotype.Service;
 
 @Service
 public class OpenSearchService {
 
-    private final RestHighLevelClient client;
-    private final ObjectMapper objectMapper = new ObjectMapper()
-            .registerModule(new JavaTimeModule());
+    RestHighLevelClient client;
 
-    public OpenSearchService() {
-        this.client = new RestHighLevelClient(
-                RestClient.builder(new HttpHost("localhost", 9200, "http"))
-        );
+    public OpenSearchService(RestHighLevelClient client) {
+        this.client = client;
     }
 
-    public void indexRate(List<RateEntity> rates) {
-        for (RateEntity rateEntity : rates) {
-            try {
-                Map<String, Object> dataMap = objectMapper.convertValue(rateEntity, Map.class);
+    public void updateOpensearchRate(List<RateEntity> rateEntities) throws Exception {
 
-                IndexRequest request = new IndexRequest("rates-index")
-                        .id(String.valueOf(rateEntity.id)) // Optional: specify ID
-                        .source(dataMap);
+        System.out.println("Starting realistic rate generation...");
 
-                client.index(request, RequestOptions.DEFAULT);
+        for (RateEntity rateEntity : rateEntities) {
 
-            } catch (IOException e) {
-                e.printStackTrace(); // Optional: log error
-            }
+            // Create rate doc
+            Map<String, Object> doc = new HashMap<>();
+            doc.put("name", rateEntity.rateName);
+            doc.put("ask", rateEntity.ask);
+            doc.put("bid", rateEntity.bid);
+            doc.put("update_time", rateEntity.rateUpdateTime);
+
+            // Send to OpenSearch
+            IndexRequest request = new IndexRequest("rates").source(doc, XContentType.JSON);
+            client.index(request, RequestOptions.DEFAULT);
+
+            System.out.printf("Sent %s →  Ask: %.4f Bid: %.4f%n", rateEntity.rateName, rateEntity.ask, rateEntity.bid);
         }
-    }
 
-    // Optional: çağrıyı kapatmak istersen
-    public void close() throws IOException {
-        client.close();
     }
 }

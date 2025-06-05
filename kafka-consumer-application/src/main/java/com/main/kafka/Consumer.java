@@ -22,10 +22,10 @@ public class Consumer{
     }
 
     @KafkaListener(topics = "rates", groupId = "rate-group")
-    public void consumeRateEvent(String message) {
+    public void consumeRateEvent(String message) throws Exception {
         List<RateEntity> rateEntities = consumer.consumeRateEvent();
         postgresqlDatabase.saveNewRates(rateEntities);
-        openSearchService.indexRate(rateEntities);
+        openSearchService.updateOpensearchRate(rateEntities);
     }
 
 }

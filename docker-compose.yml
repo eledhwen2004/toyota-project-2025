@@ -60,7 +60,7 @@ services:
 
   opensearch:
     image: opensearchproject/opensearch:latest
-    container_name: opensearch
+    container_name: opensearch-example
     environment:
       - discovery.type=single-node
       - OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m
@@ -74,7 +74,7 @@ services:
 
   opensearch-dashboards:
     image: opensearchproject/opensearch-dashboards:latest
-    container_name: opensearch-dashboards
+    container_name: opensearch-dashboards-example
     environment:
       - OPENSEARCH_HOSTS=["https://opensearch:9200"]
       - SERVER_HOST=0.0.0.0
@@ -90,3 +90,4 @@ services:
 networks:
   logging-network:
     driver: bridge
+
