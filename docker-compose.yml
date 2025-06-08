@@ -106,6 +106,27 @@ services:
       depends_on:
         - opensearch
 
+  toyota-main-rate-api:
+    build:
+      context: ./toyota-main-rate-api
+    container_name: toyota-main-rate-api
+    ports:
+      - "8083:8080"
+
+  toyota-rest-rate-api-platform:
+      build:
+        context: ./toyota-rest-rate-api-platform
+      container_name: toyota-rest-rate-api
+      ports:
+        - "8084:8080"
+
+  toyota-tcp-rate-api-platform:
+      build:
+        context: ./toyota-tcp-rate-api-platform
+      container_name: toyota-tcp-rate-api
+      ports:
+        - "8085:8080"
+
 networks:
   logging-network:
     driver: bridge
