@@ -26,7 +26,7 @@ public class RateEventProducer {
 
     public RateEventProducer() {
         final Properties props = new Properties() {{
-            put(BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+            put(BOOTSTRAP_SERVERS_CONFIG, "kafka:9092");
             put(KEY_SERIALIZER_CLASS_CONFIG,   StringSerializer.class.getCanonicalName());
             put(VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getCanonicalName());
             put(AUTO_OFFSET_RESET_CONFIG, "earliest"); // ✅ Read all messages from beginning
