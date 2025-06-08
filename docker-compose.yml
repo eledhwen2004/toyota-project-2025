@@ -48,46 +48,64 @@ services:
       KAFKA_CLUSTERS_0_NAME: local
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
 
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.12.1
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    ports:
+      - "9201:9200"
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.12.1
+    container_name: kibana
+    ports:
+      - "5602:5601"
+    depends_on:
+      - elasticsearch
+
   filebeat:
-    image: docker.elastic.co/beats/filebeat-oss:7.12.1
+    image: docker.elastic.co/beats/filebeat:7.12.1
     container_name: filebeat
     user: root
     volumes:
-      - ./filebeat.yml:/usr/share/filebeat/filebeat.yml
-      - ./logs/filebeat.log:/usr/share/logs.log
-    networks:
-      - logging-network
+      - ./filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - ./logs:/var/log/mylogs:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on:
+      - elasticsearch
 
   opensearch:
-    image: opensearchproject/opensearch:latest
-    container_name: opensearch-example
-    environment:
-      - discovery.type=single-node
-      - OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m
-      - bootstrap.memory_lock=true
-      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=Aloha.32bit
-    ports:
-      - "9200:9200" # OpenSearch API
-      - "9600:9600" # Performans izleme
-    networks:
-      - logging-network
+      image: opensearchproject/opensearch:latest
+      container_name: opensearch
+      environment:
+        - discovery.type=single-node
+        - OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m
+        - bootstrap.memory_lock=true
+        - OPENSEARCH_INITIAL_ADMIN_PASSWORD=Aloha.32bit
+      ports:
+        - "9200:9200"
+        - "9600:9600"
+      networks:
+        - logging-network
 
   opensearch-dashboards:
-    image: opensearchproject/opensearch-dashboards:latest
-    container_name: opensearch-dashboards-example
-    environment:
-      - OPENSEARCH_HOSTS=["https://opensearch:9200"]
-      - SERVER_HOST=0.0.0.0
-      - OPENSEARCH_USERNAME=admin
-      - OPENSEARCH_PASSWORD=Aloha.32bit
-    ports:
-      - "5602:5601" # OpenSearch Dashboards web arayüzü
-    networks:
-      - logging-network
-    depends_on:
-      - opensearch
+      image: opensearchproject/opensearch-dashboards:latest
+      container_name: opensearch-dashboards
+      environment:
+        - OPENSEARCH_HOSTS=["https://opensearch:9200"]
+        - SERVER_HOST=0.0.0.0
+        - OPENSEARCH_USERNAME=admin
+        - OPENSEARCH_PASSWORD=Aloha.32bit
+      ports:
+        - "5601:5601"
+      networks:
+        - logging-network
+      depends_on:
+        - opensearch
 
 networks:
   logging-network:
     driver: bridge
-

@@ -6,31 +6,22 @@
         </Console>
 
         <!-- File appenders for each logger -->
-        <File name="CacheFile" filename="toyota-main-rate-api/logs/cache.log" append="true">
+        <File name="CacheFile" filename="/logs/cache.log" append="true">
             <PatternLayout pattern="[%d] [%-5level] [%t] [%c] %msg%n"/>
         </File>
 
-        <File name="CoordinatorFile" filename="toyota-main-rate-api/logs/coordinator.log" append="true">
+        <File name="CoordinatorFile" filename="logs/coordinator.log" append="true">
             <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %-5p %c{1}:%L - %m%n"/>
         </File>
 
-        <File name="CalculatorFile" filename="toyota-main-rate-api/logs/calculator.log" append="true">
+        <File name="CalculatorFile" filename="logs/calculator.log" append="true">
             <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %-5p %c{1}:%L - %m%n"/>
         </File>
 
-        <File name="SubscriberFile" filename="toyota-main-rate-api/logs/subscriber.log" append="true">
+        <File name="SubscriberFile" filename="logs/subscriber.log" append="true">
             <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %-5p %c{1}:%L - %m%n"/>
         </File>
-        <File name="DatabaseFile" filename="toyota-main-rate-api/logs/database.log" append="true">
-            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %-5p %c{1}:%L - %m%n"/>
-        </File>
-        <File name="KafkaFile" filename="toyota-main-rate-api/logs/kafka.log" append="true">
-            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %-5p %c{1}:%L - %m%n"/>
-        </File>
-        <File name="OpenSearchFile" filename="toyota-main-rate-api/logs/openSearch.log" append="true">
-            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %-5p %c{1}:%L - %m%n"/>
-        </File>
-        <File name="Filebeat" fileName="toyota-main-rate-api/logs/filebeat.log" append="true">
+        <File name="Filebeat" fileName="logs/filebeat.log" append="true">
             <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %-5p %c{1}:%L - %m%n"/>
         </File>
     </Appenders>
@@ -54,21 +45,6 @@
         <Logger name="SubscriberLogger" level="all" additivity="false">
             <AppenderRef ref="Console"/>
             <AppenderRef ref="SubscriberFile"/>
-        </Logger>
-
-        <Logger name="DatabaseLogger" level="all" additivity="false">
-            <AppenderRef ref="Console"/>
-            <AppenderRef ref="DatabaseFile"/>
-        </Logger>
-
-        <Logger name="KafkaLogger" level="all" additivity="false">
-            <AppenderRef ref="Console"/>
-            <AppenderRef ref="KafkaFile"/>
-        </Logger>
-
-        <Logger name="OpenSearchLogger" level="all" additivity="false">
-            <AppenderRef ref="Console"/>
-            <AppenderRef ref="OpenSearchFile"/>
         </Logger>
 
         <Root level="info" additivity="false">
