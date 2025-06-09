@@ -26,7 +26,7 @@ public class RateEventConsumer {
 
     public RateEventConsumer() {
         final Properties props = new Properties() {{
-            put(BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+            put(BOOTSTRAP_SERVERS_CONFIG, "kafka:9092");
             put(KEY_DESERIALIZER_CLASS_CONFIG,   StringDeserializer.class.getCanonicalName());
             put(VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getCanonicalName());
             put(AUTO_OFFSET_RESET_CONFIG, "earliest"); // Read all messages from beginning

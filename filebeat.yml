@@ -5,9 +5,8 @@ filebeat.inputs:
 
 output.elasticsearch:
   hosts: ["http://elasticsearch:9200"]
-  # If using security:
-  # username: "elastic"
-  # password: "yourpassword"
+  username: "admin"
+  password: "Aloha.32bit"
 
 setup.kibana:
   host: "http://kibana:5601"

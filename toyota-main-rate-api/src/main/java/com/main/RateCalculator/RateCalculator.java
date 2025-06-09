@@ -7,6 +7,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.util.List;
 
@@ -15,8 +18,8 @@ public class RateCalculator {
     private String [] rawRateNames;
     private String [] derivedRates;
     private final Logger logger = LogManager.getLogger("CalculatorLogger");
-    public final String rawRatecalculationScriptUrl = System.getProperty("user.dir") + "/toyota-main-rate-api/Scripts/RateCalculation/RawRateCalculationScript.groovy";
-    public final String derivedRateCalculationScriptUrl = System.getProperty("user.dir") + "/toyota-main-rate-api/Scripts/RateCalculation/DerivedRateCalculationScript.groovy";
+    public final String rawRateCalculationScriptUrl = "RawRateCalculationScript.groovy";
+    public final String derivedRateCalculationScriptUrl = "DerivedRateCalculationScript.groovy";
 
     public RateCalculator(RateCache rateCache, String [] rawRates, String [] derivedRates) {
         this.rawRateNames = rawRates;
@@ -24,35 +27,59 @@ public class RateCalculator {
         this.rateCache = rateCache;
     }
 
-    public double [] rawRateCalculationMethod(double [] asks,double [] bids) {
+    public double[] rawRateCalculationMethod(double[] asks, double[] bids) {
         GroovyClassLoader groovyClassLoader = new GroovyClassLoader();
 
         try {
-            File groovyClassFile = new File(rawRatecalculationScriptUrl); // Path to your compiled class file
-            Class<?> groovyClass = groovyClassLoader.parseClass(groovyClassFile);
-            Object groovyObject = groovyClass.newInstance();
-            Method method = groovyClass.getMethod("calculate", double[].class,double[].class);
-            return (double[]) method.invoke(groovyObject, asks,bids);
+            InputStream inputStream = getClass().getClassLoader().getResourceAsStream(rawRateCalculationScriptUrl);
+            if (inputStream == null) {
+                throw new FileNotFoundException("Raw Groovy script not found in classpath: " + rawRateCalculationScriptUrl);
+            }
+
+            File tempScript = File.createTempFile("RawRateCalculationScript", ".groovy");
+            try (FileOutputStream out = new FileOutputStream(tempScript)) {
+                inputStream.transferTo(out);
+            }
+
+            Class<?> groovyClass = groovyClassLoader.parseClass(tempScript);
+            Object groovyObject = groovyClass.getDeclaredConstructor().newInstance();
+            Method method = groovyClass.getMethod("calculate", double[].class, double[].class);
+
+            return (double[]) method.invoke(groovyObject, asks, bids);
+
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error in rawRateCalculationMethod", e);
         }
         return null;
     }
 
-    public double[] derivedRateCalculationMethod(double []firstRateBids,double []firstRateAsks,double []secondRateBids,double []secondRateAsks){
+    public double[] derivedRateCalculationMethod(double[] firstRateBids, double[] firstRateAsks, double[] secondRateBids, double[] secondRateAsks) {
         GroovyClassLoader groovyClassLoader = new GroovyClassLoader();
 
         try {
-            File groovyClassFile = new File(derivedRateCalculationScriptUrl); // Path to your compiled class file
-            Class<?> groovyClass = groovyClassLoader.parseClass(groovyClassFile);
-            Object groovyObject = groovyClass.newInstance();
-            Method method = groovyClass.getMethod("calculate", double[].class,double[].class,double[].class,double[].class);
-            return (double[]) method.invoke(groovyObject,firstRateBids,firstRateAsks,secondRateBids,secondRateAsks);
+            InputStream inputStream = getClass().getClassLoader().getResourceAsStream(derivedRateCalculationScriptUrl);
+            if (inputStream == null) {
+                throw new FileNotFoundException("Derived Groovy script not found in classpath: " + derivedRateCalculationScriptUrl);
+            }
+
+            File tempScript = File.createTempFile("DerivedRateCalculationScript", ".groovy");
+            try (FileOutputStream out = new FileOutputStream(tempScript)) {
+                inputStream.transferTo(out);
+            }
+
+            Class<?> groovyClass = groovyClassLoader.parseClass(tempScript);
+            Object groovyObject = groovyClass.getDeclaredConstructor().newInstance();
+            Method method = groovyClass.getMethod("calculate", double[].class, double[].class, double[].class, double[].class);
+
+            return (double[]) method.invoke(groovyObject, firstRateBids, firstRateAsks, secondRateBids, secondRateAsks);
+
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error in derivedRateCalculationMethod", e);
         }
         return null;
     }
+
+
 
     public RateDto calculateRate(String rateName) {
         for(String rawRateName : rawRateNames) {
@@ -91,8 +118,10 @@ public class RateCalculator {
         logger.info("Calculating Derived Rate for  {}",rateName);
         List<RateDto> firstRawRateList = rateCache.getRawRatesIfContains(rateName.substring(0,3));
         List<RateDto> secondRawRateList = rateCache.getRawRatesIfContains(rateName.substring(3,6));
-        if (firstRawRateList.isEmpty() || secondRawRateList.isEmpty()) {
-            logger.error("Raw rate data missing for derived rate calculation: {}", rateName);
+
+        if (firstRawRateList == null || secondRawRateList == null ||
+            firstRawRateList.isEmpty() || secondRawRateList.isEmpty()) {
+            logger.error("Raw rate data missing or null for derived rate calculation: {}", rateName);
             return null;
         }
 

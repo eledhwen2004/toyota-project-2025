@@ -6,21 +6,18 @@ import org.opensearch.client.*;
 import java.util.*;
 
 import org.opensearch.common.xcontent.XContentType;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class OpenSearchService {
 
+    @Autowired
     RestHighLevelClient client;
-
-    public OpenSearchService(RestHighLevelClient client) {
-        this.client = client;
-    }
 
     public void updateOpensearchRate(List<RateEntity> rateEntities) throws Exception {
 
-        System.out.println("Starting realistic rate generation...");
-
+        System.out.println("Update OpenSearch Rate");
         for (RateEntity rateEntity : rateEntities) {
 
             // Create rate doc
@@ -35,6 +32,7 @@ public class OpenSearchService {
             client.index(request, RequestOptions.DEFAULT);
 
             System.out.printf("Sent %s →  Ask: %.4f Bid: %.4f%n", rateEntity.rateName, rateEntity.ask, rateEntity.bid);
+            System.out.println("update_time = " + rateEntity.rateUpdateTime);
         }
 
     }

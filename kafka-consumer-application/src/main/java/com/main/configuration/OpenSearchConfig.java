@@ -23,7 +23,7 @@ public class OpenSearchConfig {
         CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
         credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials("admin", "Aloha.32bit"));
 
-        RestClientBuilder builder = RestClient.builder(new HttpHost("localhost", 9200, "https"))
+        RestClientBuilder builder = RestClient.builder(new HttpHost("opensearch", 9200, "https"))
                 .setHttpClientConfigCallback(httpClientBuilder -> {
                     try {
                         SSLContext sslContext = SSLContexts.custom()
