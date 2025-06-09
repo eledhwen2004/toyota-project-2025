@@ -11,6 +11,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+/**
+ * Cache service that handles temporary storage and retrieval of rate data using Hazelcast.
+ * <p>
+ * This class supports both raw and calculated rate caching through Hazelcast distributed maps.
+ */
 public class RateCache {
 
     private final Logger logger = LogManager.getLogger("CacheLogger");
@@ -18,7 +23,10 @@ public class RateCache {
     private final IMap<String, RateDto> calculatedRateCache;
     private final HazelcastInstance hazelcastInstance;
 
-    public RateCache(){
+    /**
+     * Initializes the Hazelcast instance and retrieves references to the raw and calculated rate caches.
+     */
+    public RateCache() {
         logger.info("Rate Cache is being initialized");
         this.hazelcastInstance = Hazelcast.getHazelcastInstanceByName("hazelcast-instance");
         this.rawRateCache = hazelcastInstance.getMap("raw-rate-cache");
@@ -26,66 +34,95 @@ public class RateCache {
         logger.info("Rate Cache has been created!");
     }
 
-    public List<RateDto> getRawRatesIfContains(String symbol){
-
-        logger.info("Rates with \"{}\" symbol has been requested from raw rate cache",symbol);
+    /**
+     * Retrieves and removes all raw rates that contain the given symbol from the raw rate cache.
+     *
+     * @param symbol the substring to look for in rate names
+     * @return a list of matching {@link RateDto} objects or {@code null} if none found
+     */
+    public List<RateDto> getRawRatesIfContains(String symbol) {
+        logger.info("Rates with \"{}\" symbol has been requested from raw rate cache", symbol);
         List<RateDto> rawRatesBySymbol = new ArrayList<>();
         Collection<RateDto> rawRateList = rawRateCache.values();
-        for(RateDto rawRate : rawRateList){
-            if(rawRate.getRateName().contains(symbol)){
+        for (RateDto rawRate : rawRateList) {
+            if (rawRate.getRateName().contains(symbol)) {
                 rawRatesBySymbol.add(rawRate);
                 rawRateCache.remove(rawRate.getRateName());
             }
         }
-        if(rawRatesBySymbol.isEmpty()){
-            logger.info("There is no raw rates with the symbol \"{}\" in raw rate cache!",symbol);
+        if (rawRatesBySymbol.isEmpty()) {
+            logger.info("There is no raw rates with the symbol \"{}\" in raw rate cache!", symbol);
             return null;
         }
-        logger.info("Rate with {} symbol fetched from raw rate cache!",symbol);
+        logger.info("Rate with {} symbol fetched from raw rate cache!", symbol);
         return rawRatesBySymbol;
     }
 
-    public RateDto getRawRateByAllName(String rateName){
-        logger.info("{} rate requested!",rateName);
+    /**
+     * Retrieves and removes a raw rate by its exact name from the raw rate cache.
+     *
+     * @param rateName the exact name of the rate
+     * @return the {@link RateDto} object or {@code null} if not found
+     */
+    public RateDto getRawRateByAllName(String rateName) {
+        logger.info("{} rate requested!", rateName);
         RateDto rateDto = rawRateCache.remove(rateName);
-        if(rateDto == null){
-            logger.info("There is no rate with name \"{}\" in raw rate cache!",rateName);
+        if (rateDto == null) {
+            logger.info("There is no rate with name \"{}\" in raw rate cache!", rateName);
             return null;
         }
-        logger.info("{} rate has been retrieved from raw rate cache",rateName);
+        logger.info("{} rate has been retrieved from raw rate cache", rateName);
         return rateDto;
     }
 
-    public RateDto getCalculatedRateByName(String rateName){
-        logger.info("Calculated {} rate requested!",rateName);
+    /**
+     * Retrieves and removes a calculated rate by its name from the calculated rate cache.
+     *
+     * @param rateName the name of the calculated rate
+     * @return the {@link RateDto} object or {@code null} if not found
+     */
+    public RateDto getCalculatedRateByName(String rateName) {
+        logger.info("Calculated {} rate requested!", rateName);
         RateDto rateDto = calculatedRateCache.remove(rateName);
-        if(rateDto == null){
-            logger.info("There is no rate with name \"{}\" in calculated rate cache!",rateName);
+        if (rateDto == null) {
+            logger.info("There is no rate with name \"{}\" in calculated rate cache!", rateName);
             return null;
         }
-        logger.info("Calculated {} rate has been from retrieved from calculated rate cache",rateName);
+        logger.info("Calculated {} rate has been from retrieved from calculated rate cache", rateName);
         return rateDto;
     }
 
-    public void updateRawRate(RateDto rawRate){
+    /**
+     * Inserts or updates a raw rate in the raw rate cache.
+     *
+     * @param rawRate the {@link RateDto} to be cached
+     */
+    public void updateRawRate(RateDto rawRate) {
         String rawRateName = rawRate.getRateName();
-        logger.info("Raw rate {} is getting updated!",rawRateName);
+        logger.info("Raw rate {} is getting updated!", rawRateName);
         rawRateCache.put(rawRateName, rawRate);
-        logger.info("Raw rate {} has been updated!",rawRateName);
+        logger.info("Raw rate {} has been updated!", rawRateName);
     }
 
-    public void updateCalculatedRate(RateDto calculatedRate){
-        if(calculatedRate == null){
+    /**
+     * Inserts or updates a calculated rate in the calculated rate cache.
+     *
+     * @param calculatedRate the {@link RateDto} to be cached
+     */
+    public void updateCalculatedRate(RateDto calculatedRate) {
+        if (calculatedRate == null) {
             return;
         }
         String calculatedRateName = calculatedRate.getRateName();
-        logger.info("Calculated rate {} is getting updated!",calculatedRateName);
+        logger.info("Calculated rate {} is getting updated!", calculatedRateName);
         calculatedRateCache.put(calculatedRateName, calculatedRate);
-        logger.info("Calculated rate {} has been updated!",calculatedRateName);
+        logger.info("Calculated rate {} has been updated!", calculatedRateName);
     }
 
-    public void close(){
+    /**
+     * Shuts down the Hazelcast instance, cleaning up all distributed resources.
+     */
+    public void close() {
         this.hazelcastInstance.shutdown();
     }
-
 }
