@@ -6,59 +6,60 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 
 /**
- * Subscriber bileşenleri için temel arayüzdür.
+ * Base interface for all subscriber components.
  * <p>
- * Bu arayüz, platformlarla bağlantı kuran, bağlantıyı sonlandıran ve belirli kurlara abone olma/olmayı bırakma
- * işlemlerini gerçekleştiren sınıflar için bir sözleşme niteliğindedir.
+ * This interface acts as a contract for classes that establish platform connections,
+ * manage subscriptions, and handle rate data.
  * <p>
- * Uygulamalar {@link com.main.Subscriber.Subscribers.RESTSubscriber} ve {@link com.main.Subscriber.Subscribers.TCPSubscriber}
- * gibi farklı haberleşme yöntemleriyle gerçekleştirilir.
+ * Implementations may include different communication mechanisms such as
+ * {@link com.main.Subscriber.Subscribers.RESTSubscriber} and {@link com.main.Subscriber.Subscribers.TCPSubscriber}.
  */
 @Component
 public interface SubscriberInterface {
 
     /**
-     * Verilen kullanıcı adı ve şifre ile platforma bağlanır.
+     * Connects to the platform using the provided username and password.
      *
-     * @param platformName platform adı (ör. PF1, PF2)
-     * @param userName     kullanıcı adı
-     * @param password     parola
-     * @throws IOException bağlantı sırasında bir hata oluşursa
+     * @param platformName the name of the platform (e.g., PF1, PF2)
+     * @param userName     the username for authentication
+     * @param password     the password for authentication
+     * @throws IOException if an error occurs during connection
      */
     void connect(String platformName, String userName, String password) throws IOException;
 
     /**
-     * Platform ile olan bağlantıyı sonlandırır.
+     * Disconnects from the platform.
      *
-     * @param platformName platform adı
-     * @param userName     kullanıcı adı
-     * @param password     parola
-     * @throws IOException bağlantıyı kesme sırasında bir hata oluşursa
+     * @param platformName the name of the platform
+     * @param userName     the username used for disconnection
+     * @param password     the password used for disconnection
+     * @throws IOException if an error occurs while disconnecting
      */
     void disConnect(String platformName, String userName, String password) throws IOException;
 
     /**
-     * Belirtilen kura abone olur.
+     * Subscribes to the specified rate.
      *
-     * @param platformName platform adı
-     * @param rateName     abone olunacak kurun adı (ör. USDTRY)
-     * @throws IOException abonelik işlemi sırasında bir hata oluşursa
+     * @param platformName the name of the platform
+     * @param rateName     the name of the rate to subscribe to (e.g., USDTRY)
+     * @throws IOException if an error occurs during subscription
      */
     void subscribe(String platformName, String rateName) throws IOException;
 
     /**
-     * Daha önce abone olunan bir kurdan çıkış yapılır.
+     * Unsubscribes from a previously subscribed rate.
      *
-     * @param platformName platform adı
-     * @param rateName     abonelikten çıkılacak kurun adı
-     * @throws IOException çıkış işlemi sırasında bir hata oluşursa
+     * @param platformName the name of the platform
+     * @param rateName     the name of the rate to unsubscribe from
+     * @throws IOException if an error occurs while unsubscribing
      */
     void unSubscribe(String platformName, String rateName) throws IOException;
 
     /**
-     * Abone bileşenine koordinatör atanır. Koordinatör abonelik, bağlantı ve veri durumlarını kontrol eder.
+     * Sets the coordinator for the subscriber. The coordinator manages the
+     * connection, subscription, and rate data status.
      *
-     * @param coordinator uygulamanın merkezindeki {@link CoordinatorInterface} örneği
+     * @param coordinator the {@link CoordinatorInterface} instance managing the system
      */
     void setCoordinator(CoordinatorInterface coordinator);
 }

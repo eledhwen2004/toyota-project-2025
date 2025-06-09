@@ -10,10 +10,16 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
-import java.util.regex.Pattern;
 
-public class ClientConnection extends Thread implements ClientConnectionInterface{
+/**
+ * Handles the connection between the server and a client.
+ * <p>
+ * Each {@code ClientConnection} manages a separate socket for a connected client,
+ * processes subscription/unsubscription requests, validates user credentials, and
+ * periodically sends rate updates to the client.
+ * </p>
+ */
+public class ClientConnection extends Thread implements ClientConnectionInterface {
 
     private final Socket clientSocket;
     private final List<Rate> rateList;
@@ -23,58 +29,72 @@ public class ClientConnection extends Thread implements ClientConnectionInterfac
     private final Thread rateSender;
     private final User exampleUser;
 
-
+    /**
+     * Returns the socket associated with this client connection.
+     *
+     * @return the client's socket
+     */
     public Socket getClientSocket() {
         return clientSocket;
     }
 
-    public ClientConnection(Socket clientSocket,List<Rate> rateList) throws IOException {
-        this.exampleUser = new User("1234","1234");
+    /**
+     * Initializes a new {@code ClientConnection}, performs user authentication,
+     * and prepares streams and threads for communication.
+     *
+     * @param clientSocket the socket connected to the client
+     * @param rateList     the list of available rates to subscribe
+     * @throws IOException if an I/O error occurs while setting up the connection
+     */
+    public ClientConnection(Socket clientSocket, List<Rate> rateList) throws IOException {
+        this.exampleUser = new User("1234", "1234");
         this.rateList = rateList;
         this.subscribedRateList = new ArrayList<>();
         this.clientSocket = clientSocket;
-        this.rateSender = new Thread(()-> {
+
+        this.rateSender = new Thread(() -> {
             try {
                 this.sendSubscribedRates();
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
         });
-        try {
-            reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        try {
-            writer = new PrintWriter(clientSocket.getOutputStream(), true);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        // Here will change
+
+        this.reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+        this.writer = new PrintWriter(clientSocket.getOutputStream(), true);
+
         String connectionMessage = reader.readLine();
         if (connectionMessage == null) {
             this.clientSocket.close();
             return;
         }
-        String []user = connectionMessage.split("\\|");
-        if(!user[0].equals(exampleUser.getUsername()) || !user[1].equals(exampleUser.getPassword())){
+
+        String[] user = connectionMessage.split("\\|");
+        if (!user[0].equals(exampleUser.getUsername()) || !user[1].equals(exampleUser.getPassword())) {
             writer.println("Wrong username or password connection closing");
             System.out.println("Connection closing...");
             this.clientSocket.close();
             return;
         }
-        //
+
         this.start();
     }
 
+    /**
+     * Parses and handles incoming client messages.
+     * Supported messages: {@code subscribe|rateName} or {@code unsubscribe|rateName}
+     *
+     * @param message the received message from the client
+     */
     @Override
     public void handleMessageTaken(String message) {
-        String []messageParts = message.split("\\|");
-        if(messageParts.length != 2) {
+        String[] messageParts = message.split("\\|");
+        if (messageParts.length != 2) {
             writer.println("Invalid message received: " + message);
             return;
         }
-        switch (messageParts[0]){
+
+        switch (messageParts[0]) {
             case "subscribe":
                 subscribeToRate(messageParts[1]);
                 break;
@@ -87,10 +107,15 @@ public class ClientConnection extends Thread implements ClientConnectionInterfac
         }
     }
 
+    /**
+     * Subscribes the client to updates for a specific rate.
+     *
+     * @param rateName the name of the rate to subscribe to
+     */
     @Override
     public void subscribeToRate(String rateName) {
-        for(Rate rate: rateList) {
-            if(rate.getRateName().equals(rateName)) {
+        for (Rate rate : rateList) {
+            if (rate.getRateName().equals(rateName)) {
                 synchronized (subscribedRateList) {
                     subscribedRateList.add(rate);
                 }
@@ -98,10 +123,15 @@ public class ClientConnection extends Thread implements ClientConnectionInterfac
         }
     }
 
+    /**
+     * Unsubscribes the client from a previously subscribed rate.
+     *
+     * @param rateName the name of the rate to unsubscribe from
+     */
     @Override
     public void unsubscribeFromRate(String rateName) {
-        for(Rate rate: subscribedRateList) {
-            if(rate.getRateName().equals(rateName)) {
+        for (Rate rate : subscribedRateList) {
+            if (rate.getRateName().equals(rateName)) {
                 synchronized (subscribedRateList) {
                     subscribedRateList.remove(rate);
                 }
@@ -109,30 +139,37 @@ public class ClientConnection extends Thread implements ClientConnectionInterfac
         }
     }
 
+    /**
+     * Continuously sends the current values of subscribed rates to the client at regular intervals (1 second).
+     *
+     * @throws InterruptedException if the thread is interrupted while sleeping
+     */
     @Override
     public void sendSubscribedRates() throws InterruptedException {
-        do{
-            synchronized(subscribedRateList) {
-                for(Rate rate: subscribedRateList){
-                    writer.println(rate.getRateName()+"|"+rate.getAsk()+"|"+rate.getBid()+"|"+rate.getTimestamp());
+        do {
+            synchronized (subscribedRateList) {
+                for (Rate rate : subscribedRateList) {
+                    writer.println(rate.getRateName() + "|" + rate.getAsk() + "|" + rate.getBid() + "|" + rate.getTimestamp());
                 }
             }
             Thread.sleep(1000);
-        }while(clientSocket.isConnected());
+        } while (clientSocket.isConnected());
     }
 
-
+    /**
+     * Starts the communication thread. Listens for client messages and processes them accordingly.
+     */
     @Override
     public void run() {
         rateSender.start();
         String messageTaken;
-        do{
+        do {
             try {
                 handleMessageTaken(reader.readLine());
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-        }while(clientSocket.isConnected());
+        } while (clientSocket.isConnected());
 
         System.out.println("Connection closing...");
         try {
