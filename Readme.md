@@ -4,30 +4,24 @@ Bu proje, TCP ve REST tabanlı döviz kuru sağlayıcılardan veri toplayan, bu 
 
 ---
 
-## 🔧 İçindekiler
+##  İçindekiler
 
 - [Proje Özeti](#proje-özeti)
 - [Sistem Gereksinimleri](#sistem-gereksinimleri)
 - [Kurulum Adımları](#kurulum-adımları)
 - [Mimari Bileşenler](#mimari-bileşenler)
-- [Veri Akışı ve Hesaplama Yöntemleri](#veri-akışı-ve-hesaplama-yöntemleri)
 - [Kafka Yapılandırması](#kafka-yapılandırması)
 - [Loglama ve Gözlemlenebilirlik](#loglama-ve-gözlemlenebilirlik)
-- [Veritabanı Yapısı](#veritabanı-yapısı)
-- [Test Senaryoları](#test-senaryoları)
-- [Geliştirici Bilgileri](#geliştirici-bilgileri)
-- [Proje Sunum Özeti](#proje-sunum-özeti)
-- [Lisans](#lisans)
 
 ---
 
-## 📌 Proje Özeti
+##  Proje Özeti
 
 Bu sistem, farklı veri kaynaklarından gelen döviz kuru verilerini gerçek zamanlı olarak toplayarak hesaplamakta, loglamakta ve bu verileri PostgreSQL ile OpenSearch’e göndermektedir. Platformlar arası veri tutarlılığı için dinamik hesaplama metodolojileri ve tolerans kontrolleri bulunmaktadır.
 
 ---
 
-## 💻 Sistem Gereksinimleri
+##  Sistem Gereksinimleri
 
 ### 1. Docker
 - [Docker Desktop](https://www.docker.com/products/docker-desktop)
@@ -46,8 +40,8 @@ docker-compose --version
 #### Kurulum Adımları
 
 ```
-git clone https://github.com/kullanici-adi/forex-rate-system.git
-cd forex-rate-system
+git clone https://github.com/eledhwen2004/toyota-project-2025.git
+cd toyota-project-2025
 docker-compose up --build
 ```
 
@@ -71,7 +65,7 @@ docker-compose up --build
 
     TCP Platform (toyota-tcp-rate-api-platform)
 
-        Telnet üzerinden çalışır
+        Telnet üzerinden de çalışır
 
         Komut: subscribe|PF1_USDTRY
 
@@ -89,7 +83,7 @@ docker-compose up --build
 
         PostgreSQL'e veri yazar
 
-        OpenSearch'e log yollar
+        Opensearch'e veri yollar
 
     Filebeat
 
@@ -97,9 +91,9 @@ docker-compose up --build
 
         Logları OpenSearch’e gönderir
 
-### 🧪 Kafka Yapılandırması
+###  Kafka Yapılandırması
 
-    Topic: rate-data
+    Topic: rates
 
     Producer: toyota-main-rate-api
 
@@ -110,7 +104,7 @@ docker-compose up --build
     Kafka UI: http://localhost:8082
 
 
-### 📜 Loglama ve Gözlemlenebilirlik
+###  Loglama ve Gözlemlenebilirlik
 
     Log Seviyeleri: FATAL, ERROR, WARN, INFO, DEBUG, TRACE
 
