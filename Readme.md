@@ -48,10 +48,6 @@ docker-compose up --build
 
 | Bileşen              | Port | Adres                                          |
 | -------------------- | ---- | ---------------------------------------------- |
-| Kafka UI             | 8082 | [http://localhost:8082](http://localhost:8082) |
-| REST Rate API        | 8080 | [http://localhost:8080](http://localhost:8080) |
-| TCP Platform         | 8081 | telnet localhost 8081                          |
-| Ana Uygulama         | 8083 | [http://localhost:8083](http://localhost:8083) |
 | OpenSearch Dashboard | 5601 | [http://localhost:5601](http://localhost:5601) |
 | Kibana (Elastic)     | 5602 | [http://localhost:5602](http://localhost:5602) |
 
