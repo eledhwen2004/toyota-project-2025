@@ -35,11 +35,9 @@ Bu sistem, farklı veri kaynaklarından gelen döviz kuru verilerini gerçek zam
 
    Test:
 
-```docker-compose --version```
+docker-compose --version
 
 #### Kurulum Adımları
-
-Aşağıdaki kodları windows cmd yada herhangi bir işletim sisteminin terminalinde çalıştırmanız gerekiyor
 
 ```
 git clone https://github.com/eledhwen2004/toyota-project-2025.git
@@ -120,3 +118,80 @@ docker-compose up --build
 
     Filebeat ile OpenSearch'e gönderilir
 
+## 🔍 OpenSearch Dashboards Üzerinden Log ve Rate Verilerinin İncelenmesi
+
+Bu sistemde hem uygulama logları (Filebeat aracılığıyla) hem de hesaplanmış döviz kuru (rate) verileri OpenSearch'e yazılır. Bu veriler, **OpenSearch Dashboards** (veya Elasticsearch kullananlar için Kibana) üzerinde **Discover sekmesi** aracılığıyla kolayca görüntülenebilir.
+
+---
+
+### 🧾 A. Log Verilerini Görüntüleme (filebeat ile gelen)
+
+#### 1. Index Pattern Oluştur
+1. Tarayıcıda `http://localhost:5601` adresine git.
+2. Sol menüden **“Stack Management” → “Index Patterns”** sekmesine gir.
+3. Yeni bir index pattern oluştur:  
+   **Pattern adı:** `filebeat-*`
+4. Timestamp field olarak `@timestamp` seç.
+5. Kaydet (Create Index Pattern).
+
+#### 2. Logları Görüntüleme
+1. Sol menüden **“Discover”** sekmesine tıkla.
+2. Üst kısımdan `filebeat-*` index pattern'ini seç.
+3. Sağ üstten tarih aralığını genişlet (örn. “Last 24 hours”).
+4. Loglar liste halinde aşağıda görünür.
+
+#### 3. Görüntülenebilecek Alanlar
+- `@timestamp` → Log zamanı
+- `log.level` → INFO, ERROR, WARN vb.
+- `message` → Log içeriği
+- `platform` → Logun hangi servis tarafından üretildiği
+- `rateName`, `rateValue` gibi özel alanlar (log formatına bağlı olarak)
+
+#### 🔎 Örnek Filtreler
+```text
+log.level: ERROR
+
+rate_readme_content = """
+## 💱 Rate Verilerini Görüntüleme (OpenSearch Dashboards - Discover)
+
+Kafka Consumer bileşeni tarafından OpenSearch'e gönderilen döviz kuru (rate) verileri, Discover sekmesinde aşağıdaki adımlarla incelenebilir.
+```
+
+
+### 1. Index Pattern Oluştur
+
+1. OpenSearch Dashboards arayüzüne `http://localhost:5601` adresinden giriş yapın.
+2. Sol menüden **“Stack Management” → “Index Patterns”** sekmesine tıklayın.
+3. **Yeni bir index pattern** oluşturun:
+    - **Index pattern adı:** `rates-*` *(veya senin sistemine göre: `rate-data-*`, `logstash-*` olabilir)*
+4. **Timestamp field** olarak `rateUpdatetime` veya `@timestamp` alanını seçin.
+5. Kaydedin ve Discover ekranına geçin.
+
+---
+
+### 2. Discover Sekmesinden Rate Verilerini İnceleme
+
+1. Sol menüde **Discover** sekmesine tıklayın.
+2. Üst kısımdan `rates-*` index pattern’ini seçin.
+3. Sağ üstten tarih aralığını “Last 15 minutes” veya “Last 1 hour” gibi geniş bir zaman aralığıyla ayarlayın.
+4. Veri listesi otomatik olarak aşağıda görüntülenecektir.
+
+---
+
+### 3. Görüntülenebilecek Örnek Alanlar
+
+| Alan Adı           | Açıklama                  |
+|--------------------|---------------------------|
+| `rateName`         | Örn: USDTRY               |
+| `bid`              | Alış kuru (float)         |
+| `ask`              | Satış kuru (float)        |
+| `update_time`      | Verinin üretildiği zaman  |
+| `dbUpdatetime`     | Veritabanına yazılma zamanı |
+
+---
+
+### 4. Örnek Filtreler
+
+#### Belirli kur için:
+```text
+rateName: USDTRY
