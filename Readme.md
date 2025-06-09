@@ -39,11 +39,38 @@ docker-compose --version
 
 #### Kurulum Adımları
 
+
+
 ```
 git clone https://github.com/eledhwen2004/toyota-project-2025.git
 cd toyota-project-2025
+```
+Eğer linux kullanıyorsanız filebeat.yml dosyasına root yetkisi vermek için terminale
+```
+sudo chown root:root filebeat.yml
+sudo chmod 600 filebeat.yml
+```
+yazmanız gerekir.
+
+Eğer windows kullanıyorsanız:
+
+-filebeat.yml dosyasına sağ tık → Özellikler
+
+-Güvenlik sekmesine git
+
+-“Düzenle”ye tıkla
+
+-Sadece kendine (veya Administrators) okuma/yazma yetkisi ver
+
+-Diğer kullanıcıların (örn. Everyone) erişimini kaldır
+
+Sonrasında
+
+```
 docker-compose up --build
 ```
+
+--------------------------------------------------------------------------------
 
 
 | Bileşen              | Port | Adres                                          |
