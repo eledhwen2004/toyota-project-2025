@@ -6,21 +6,6 @@
         </Console>
 
         <!-- File appenders for each logger -->
-        <File name="CacheFile" filename="/logs/cache.log" append="true">
-            <PatternLayout pattern="[%d] [%-5level] [%t] [%c] %msg%n"/>
-        </File>
-
-        <File name="CoordinatorFile" filename="/logs/coordinator.log" append="true">
-            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %-5p %c{1}:%L - %m%n"/>
-        </File>
-
-        <File name="CalculatorFile" filename="/logs/calculator.log" append="true">
-            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %-5p %c{1}:%L - %m%n"/>
-        </File>
-
-        <File name="SubscriberFile" filename="/logs/subscriber.log" append="true">
-            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %-5p %c{1}:%L - %m%n"/>
-        </File>
         <File name="Filebeat" fileName="/logs/filebeat.log" append="true">
             <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %-5p %c{1}:%L - %m%n"/>
         </File>
@@ -29,27 +14,36 @@
     <Loggers>
         <Logger name="CacheLogger" level="all" additivity="false">
             <AppenderRef ref="Console"/>
-            <AppenderRef ref="CacheFile"/>
+            <AppenderRef ref="Filebeat"/>
         </Logger>
 
         <Logger name="CoordinatorLogger" level="all" additivity="false">
             <AppenderRef ref="Console"/>
-            <AppenderRef ref="CoordinatorFile"/>
+            <AppenderRef ref="Filebeat"/>
         </Logger>
 
         <Logger name="CalculatorLogger" level="all" additivity="false">
             <AppenderRef ref="Console"/>
-            <AppenderRef ref="CalculatorFile"/>
+            <AppenderRef ref="Filebeat"/>
         </Logger>
 
         <Logger name="SubscriberLogger" level="all" additivity="false">
             <AppenderRef ref="Console"/>
-            <AppenderRef ref="SubscriberFile"/>
+            <AppenderRef ref="Filebeat"/>
+        </Logger>
+
+        <Logger name="SubscriberClassLoaderLogger" level="all" additivity="false">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="Filebeat"/>
+        </Logger>
+
+        <Logger name="KafkaProducerLogger" level="all" additivity="false">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="Filebeat"/>
         </Logger>
 
         <Root level="info" additivity="false">
             <AppenderRef ref="Console"/>
-            <AppenderRef ref="Filebeat"/>
         </Root>
     </Loggers>
 </Configuration>

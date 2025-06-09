@@ -20,7 +20,7 @@ import static org.apache.kafka.clients.producer.ProducerConfig.VALUE_SERIALIZER_
 
 public class RateEventProducer {
 
-    private final Logger logger = LogManager.getLogger("KafkaLogger");
+    private final Logger logger = LogManager.getLogger("KafkaProducerLogger");
     private Producer<String, String> producer;
     private final String topic;
 
@@ -45,7 +45,7 @@ public class RateEventProducer {
         if (ex != null) {
             ex.printStackTrace();
         } else {
-            System.out.printf("Produced event to topic %s: key = %-10s value = %s%n", topic, rateName, rate.toString());
+            logger.info("Produced event to topic {}: key = {} value = {}", topic, rateName, rate.toString());
         }
     }
 

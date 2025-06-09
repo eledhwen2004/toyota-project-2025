@@ -25,6 +25,9 @@ public class RateCalculator {
         this.rawRateNames = rawRates;
         this.derivedRates = derivedRates;
         this.rateCache = rateCache;
+        logger.info("RateCalculator initialized with {} raw rates and {} derived rates",
+                rawRates.length, derivedRates.length);
+
     }
 
     public double[] rawRateCalculationMethod(double[] asks, double[] bids) {
@@ -82,6 +85,7 @@ public class RateCalculator {
 
 
     public RateDto calculateRate(String rateName) {
+        logger.info("Calculating rate for: {}", rateName);
         for(String rawRateName : rawRateNames) {
             if(rawRateName.equals(rateName)) {
                 return calculateRawRate(rateName);
@@ -92,6 +96,7 @@ public class RateCalculator {
                 return calculateDerivedRate(rateName);
             }
         }
+        logger.warn("Requested rate {} not found in raw or derived rate lists", rateName);
         return null;
     }
 
@@ -99,6 +104,7 @@ public class RateCalculator {
         logger.info("Calculating Raw Rate for {}", rateName);
         List <RateDto> rawRateList = rateCache.getRawRatesIfContains(rateName);
         if(rawRateList.isEmpty()) {
+            logger.warn("No raw rate data found in cache for: {}", rateName);
             return null;
         }
         double [] bids = new double[rawRateList.size()];
@@ -110,6 +116,10 @@ public class RateCalculator {
             asks[i] = rawRateList.get(i).getAsk();
         }
         double [] rateFields = (double[]) rawRateCalculationMethod(bids,asks);
+        if (rateFields == null || rateFields.length < 2) {
+            logger.error("Raw rate calculation returned null or invalid result for {}", rateName);
+            return null;
+        }
         logger.info("Raw Rate Calculated for {}", rateName);
         return new RateDto(rateName,rateFields[0],rateFields[1], rawRateList.getFirst().getTimestamp());
     }
@@ -124,7 +134,6 @@ public class RateCalculator {
             logger.error("Raw rate data missing or null for derived rate calculation: {}", rateName);
             return null;
         }
-
 
         double []firstRateBids = new double[firstRawRateList.size()];
         double []firstRateAsks = new double[firstRawRateList.size()];
@@ -144,7 +153,8 @@ public class RateCalculator {
         }
         double [] rateFields = (double[]) derivedRateCalculationMethod(firstRateBids,firstRateAsks,secondRateBids,secondRateAsks);
         if (rateFields == null || rateFields.length < 2) {
-            throw new IllegalStateException("Groovy script returned null or invalid result");
+            logger.error("Derived rate calculation failed or returned invalid result for {}", rateName);
+            return null;
         }
         logger.info("Derived Rate Calculated for {}", rateName);
         return new RateDto(rateName,rateFields[0],rateFields[1],secondRawRateList.getFirst().getTimestamp());

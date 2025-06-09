@@ -37,11 +37,16 @@ public class Coordinator extends Thread implements CoordinatorInterface,AutoClos
 
     public Coordinator(ApplicationContext applicationContext) throws IOException {
         logger.info("Initializing Coordinator ");
+        logger.debug("User credentials set: username={}, password={}", userName, password);
         this.applicationContext = applicationContext;
         this.SubscriberRegisterer();
         this.subscribedRateNames = CoordinatorConfig.getRawRateNames();
         this.rawRateNames = CoordinatorConfig.getRawRateNames();
         this.calculatedRateNames = CoordinatorConfig.getCalculatedRateNames();
+
+        logger.debug("Subscribed rate names: {}", (Object) subscribedRateNames);
+        logger.debug("Calculated rate names: {}", (Object) calculatedRateNames);
+
         for(String rawRateNames : rawRateNames) {
             for(String subscriberName : subscriberNames) {
                 rateStatusHashMap.put(subscriberName + "_" + rawRateNames, RateStatus.NOT_AVAILABLE);
@@ -51,21 +56,23 @@ public class Coordinator extends Thread implements CoordinatorInterface,AutoClos
         this.rateCache = new RateCache();
         this.rateCalculator = new RateCalculator(this.rateCache,CoordinatorConfig.getRawRateNames(),CoordinatorConfig.getDerivedRateNames());
         this.SubscriberConnector(this.userName,this.password);
-
-        logger.info("Coordinator initialized");
+        logger.info("Coordinator initialized successfully");
         this.start();
     }
 
     public void SubscriberRegisterer() throws IOException {
+        logger.info("Subscriber are getting registered...");
         String [] ServerAddresses = SubscriberConfig.getServerAddresses();
+        logger.debug("Fetched server addresses: {}", (Object) ServerAddresses);
         for (String serverAddress : ServerAddresses) {
             if (serverAddress.isEmpty()) continue;
 
             String newSubscriberName = "PF" + (subscriberNames.size() + 1);
-            System.out.println("Registering Subscriber : " + newSubscriberName);
+            logger.info("Attempting to register Subscriber: {}", newSubscriberName);
             SubscriberInterface sub = null;
 
             if (serverAddress.startsWith("http://") || serverAddress.startsWith("https://")) {
+                logger.debug("Subscriber {} is a REST subscriber with address {}", newSubscriberName, serverAddress);
                 sub = SubscriberClassLoader.loadSubscriber(
                         "RESTSubscriber",
                         new Class<?>[]{String.class, String.class},
@@ -77,54 +84,61 @@ public class Coordinator extends Thread implements CoordinatorInterface,AutoClos
                     try {
                         String host = parts[0];
                         int port = Integer.parseInt(parts[1]);
+                        logger.debug("Subscriber {} is a TCP subscriber with host {} and port {}", newSubscriberName, host, port);
                         sub = SubscriberClassLoader.loadSubscriber(
                                 "TCPSubscriber",
                                 new Class<?>[]{String.class, String.class, int.class},
                                 new Object[]{newSubscriberName, host, port}
                         );
                     } catch (NumberFormatException e) {
-                        System.out.println("Invalid TCP port: " + parts[1]);
+                        logger.error("Invalid TCP port: {}", parts[1]);
                     }
                 } else {
-                    System.out.println("Invalid TCP entry format: " + serverAddress);
+                    logger.error("Invalid TCP entry format: {}", serverAddress);
                 }
             }
             if(sub == null) {
-                logger.error("Problem occurred while registering subscriber : {}\n", newSubscriberName);
+                logger.error("Problem occurred while registering subscriber : {}", newSubscriberName);
                 continue;
             }
             this.subscriberNames.add(newSubscriberName);
             subscriberHashMap.put(newSubscriberName, sub);
             sub.setCoordinator(this);
-
+            logger.info("Successfully registered subscriber: {}", newSubscriberName);
         }
+        logger.info("Subscribers are successfully registered");
     }
 
     public void SubscriberConnector(String userName,String password) throws IOException {
+        logger.info("Connecting to subscribers...");
         try {
             for(String subscriberName : subscriberNames){
+                logger.info("Connecting subscriber: {}", subscriberName);
                 SubscriberInterface sub = this.subscriberHashMap.get(subscriberName);
                 if(sub == null){
                     throw new IllegalStateException("Failed to get subscriber from HashMap: " + subscriberName);
                 }
                 sub.connect(subscriberName,userName,password);
-                System.out.println(subscriberName + " connected");
+                logger.info("{} connected successfully", subscriberName);
             }
         } catch (IOException e) {
+            logger.error("IOException occurred during subscriber connection: {}", e.getMessage(), e);
             throw new RuntimeException(e);
         }
-
     }
 
 
     @Override
     public void close() throws Exception {
+        logger.info("Coordinator shutting down. Disconnecting subscribers...");
         for(String subscriberName : subscriberNames){
             SubscriberInterface sub = this.subscriberHashMap.get(subscriberName);
+            logger.info("Disconnected subscriber: {}", subscriberName);
             sub.disConnect(subscriberName,"1234","1234");
             subscriberHashMap.remove(subscriberName);
         }
         rateCache.close();
+        logger.info("Coordinator shutdown complete");
     }
 
     @Override
@@ -134,6 +148,7 @@ public class Coordinator extends Thread implements CoordinatorInterface,AutoClos
             try {
                 sleep(1001);
             } catch (InterruptedException e) {
+                logger.error("Main loop interrupted: {}", e.getMessage(), e);
                 throw new RuntimeException(e);
             }
 
@@ -141,6 +156,7 @@ public class Coordinator extends Thread implements CoordinatorInterface,AutoClos
             for(String calculatedRateName : calculatedRateNames){
                 RateDto rateDto = rateCalculator.calculateRate(calculatedRateName);
                 if(rateDto == null){
+                    logger.warn("Calculated rate is null for: {}", calculatedRateName);
                     continue;
                 }
                 rateCache.updateCalculatedRate(rateDto);
@@ -154,6 +170,7 @@ public class Coordinator extends Thread implements CoordinatorInterface,AutoClos
     public void onConnect(String platformName, Boolean status) throws IOException {
         logger.info("Connected to platform {} -- status {}", platformName,status);
         if(status) {
+            logger.debug("Subscribing to rates for platform: {}", platformName);
             for (String rateName : subscribedRateNames) {
                 this.subscriberHashMap.get(platformName).subscribe(platformName, rateName);
             }
@@ -164,6 +181,7 @@ public class Coordinator extends Thread implements CoordinatorInterface,AutoClos
     public void onDisConnect(String platformName, Boolean status) throws IOException {
         logger.info("Disconnected from platform {} -- status {}", platformName,status);
         if(!status) {
+            logger.debug("Unsubscribing from rates for platform: {}", platformName);
             for (String rateName : subscribedRateNames) {
                 this.subscriberHashMap.get(platformName).unSubscribe(platformName, rateName);
             }
@@ -181,8 +199,7 @@ public class Coordinator extends Thread implements CoordinatorInterface,AutoClos
 
     @Override
     public void onRateUpdate(String platformName, String rateName, RateDto rate) {
-        logger.info("Rate updated for platform {} -- rateName {}", platformName,rateName);
-        rate.setStatus(RateStatus.UPDATED);
+        logger.info("Rate updated for platform {} -- rateName {}", platformName, rateName);
         this.rateStatusHashMap.put(rateName, RateStatus.UPDATED);
         rateCache.updateRawRate(rate);
         kafka.produceRateEvent(rate);
