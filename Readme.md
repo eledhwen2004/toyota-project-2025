@@ -35,9 +35,11 @@ Bu sistem, farklı veri kaynaklarından gelen döviz kuru verilerini gerçek zam
 
    Test:
 
-docker-compose --version
+```docker-compose --version```
 
 #### Kurulum Adımları
+
+Aşağıdaki kodları windows cmd yada herhangi bir işletim sisteminin terminalinde çalıştırmanız gerekiyor
 
 ```
 git clone https://github.com/eledhwen2004/toyota-project-2025.git
