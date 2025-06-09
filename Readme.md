@@ -127,7 +127,7 @@ Bu sistemde hem uygulama logları (Filebeat aracılığıyla) hem de hesaplanmı
 ### 🧾 A. Log Verilerini Görüntüleme (filebeat ile gelen)
 
 #### 1. Index Pattern Oluştur
-1. Tarayıcıda `http://localhost:5601` adresine git.
+1. Tarayıcıda `http://localhost:5602` adresine git.
 2. Sol menüden **“Stack Management” → “Index Patterns”** sekmesine gir.
 3. Yeni bir index pattern oluştur:  
    **Pattern adı:** `filebeat-*`
