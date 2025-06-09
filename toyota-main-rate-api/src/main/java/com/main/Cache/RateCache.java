@@ -34,6 +34,7 @@ public class RateCache {
         for(RateDto rawRate : rawRateList){
             if(rawRate.getRateName().contains(symbol)){
                 rawRatesBySymbol.add(rawRate);
+                rawRateCache.remove(rawRate.getRateName());
             }
         }
         if(rawRatesBySymbol.isEmpty()){
@@ -46,7 +47,7 @@ public class RateCache {
 
     public RateDto getRawRateByAllName(String rateName){
         logger.info("{} rate requested!",rateName);
-        RateDto rateDto = rawRateCache.get(rateName);
+        RateDto rateDto = rawRateCache.remove(rateName);
         if(rateDto == null){
             logger.info("There is no rate with name \"{}\" in raw rate cache!",rateName);
             return null;
@@ -57,7 +58,7 @@ public class RateCache {
 
     public RateDto getCalculatedRateByName(String rateName){
         logger.info("Calculated {} rate requested!",rateName);
-        RateDto rateDto = calculatedRateCache.get(rateName);
+        RateDto rateDto = calculatedRateCache.remove(rateName);
         if(rateDto == null){
             logger.info("There is no rate with name \"{}\" in calculated rate cache!",rateName);
             return null;

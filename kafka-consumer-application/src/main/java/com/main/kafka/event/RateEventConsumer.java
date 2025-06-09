@@ -14,8 +14,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.serialization.StringDeserializer;
-
-import java.util.*;
+import org.springframework.stereotype.Component;
 
 import static org.apache.kafka.clients.CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG;
 import static org.apache.kafka.clients.consumer.ConsumerConfig.*;
@@ -37,15 +36,15 @@ public class RateEventConsumer {
     }
 
     public List<RateEntity> consumeRateEvent() {
-        List<RateEntity> rateDtoList = new ArrayList<>();
+        List<RateEntity> rateEntityList = new ArrayList<>();
         synchronized (consumer) {
             consumer.subscribe(Arrays.asList(topic));
             ConsumerRecords<String, String > records = consumer.poll(Duration.ofMillis(1000));
             for (ConsumerRecord<String, String> record : records) {
-                rateDtoList.add(RateMapper.stringToRateEntity(record.value()));
+                rateEntityList.add(RateMapper.stringToRateEntity(record.value()));
             }
         }
-        return rateDtoList;
+        return rateEntityList;
     }
 }
 

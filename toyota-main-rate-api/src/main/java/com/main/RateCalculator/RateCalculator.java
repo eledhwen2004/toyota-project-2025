@@ -103,6 +103,10 @@ public class RateCalculator {
     private RateDto calculateRawRate(String rateName) {
         logger.info("Calculating Raw Rate for {}", rateName);
         List <RateDto> rawRateList = rateCache.getRawRatesIfContains(rateName);
+        if (rawRateList == null || rawRateList.isEmpty()){
+            logger.error("Raw rate data missing or null for derived rate calculation: {}", rateName);
+            return null;
+        }
         if(rawRateList.isEmpty()) {
             logger.warn("No raw rate data found in cache for: {}", rateName);
             return null;
